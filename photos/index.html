@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="zh-cN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover">
+<title>相册 | 花独柒</title>
+<meta name="author" content="猪教授">
+<meta name="copyright" content="猪教授">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#ffffff">
+<meta name="description" content="纸上谈来终觉浅，绝知此事要躬行">
+<meta property="og:type" content="website">
+<meta property="og:title" content="相册">
+<meta property="og:url" content="http://example.com/photos/index.html">
+<meta property="og:site_name" content="花独柒">
+<meta property="og:description" content="纸上谈来终觉浅，绝知此事要躬行">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/total.png">
+<meta property="article:author" content="猪教授">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/total.png">
+<link rel="shortcut icon" href="/img/netoal.jpg">
+<link rel="canonical" href="http://example.com/photos/index.html">
+<link rel="preconnect" href="//cdn.jsdelivr.net"/>
+<link rel="preconnect" href="//busuanzi.ibruce.info"/>
+<link rel="stylesheet" href="/css/index.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'">
+<style>
+.photo-album-page .album-header {
+  text-align: center;
+  padding: 20px 0 30px;
+}
+.photo-album-page .album-header h2 {
+  font-size: 1.8em;
+  margin-bottom: 8px;
+}
+.photo-album-page .album-header .album-date {
+  color: var(--font-color);
+  opacity: 0.6;
+  font-size: 0.9em;
+}
+.photo-album-page .album-header .album-desc {
+  margin-top: 10px;
+  color: var(--font-color);
+  opacity: 0.8;
+}
+
+.gallery-grid {
+  column-count: 3;
+  column-gap: 12px;
+  padding: 0 0 20px;
+}
+
+.gallery-item {
+  break-inside: avoid;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+
+.gallery-item:hover {
+  transform: scale(1.02);
+}
+
+.gallery-item a {
+  display: block;
+  width: 100%;
+}
+
+.gallery-item img {
+  display: block;
+  width: 100%;
+  border-radius: 8px;
+  transition: filter 0.3s ease;
+}
+
+.gallery-item img[lazy=loaded] {
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media screen and (max-width: 768px) {
+  .gallery-grid {
+    column-count: 2;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .gallery-grid {
+    column-count: 1;
+  }
+}
+</style>
+<script>
+const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":false,"highlightHeightLimit":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Error',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyload: true,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}
+</script>
+<script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '相册',
+  isPost: false,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2025-09-20 19:12:05'
+}
+</script>
+<script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script>
+<meta name="generator" content="Hexo 7.0.0">
+</head>
+<body>
+<div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/total.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">2</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fa fa-graduation-cap"></i><span> 博文</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fa fa-archive"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fa fa-folder-open"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 生活</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/shuoshuo/"><i class="fa-fw fa fa-comments-o"></i><span> 分享</span></a></li><li><a class="site-page child" href="/photos/"><i class="fa-fw fa fa-camera-retro"></i><span> 相册</span></a></li><li><a class="site-page child" href="/music/"><i class="fa-fw fa fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 影视</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/links/"><i class="fa-fw fa fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/comment/"><i class="fa-fw fa fa-paper-plane"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于笔者</span></a></div></div></div></div>
+<div class="page" id="body-wrap">
+<header class="not-home-page" id="page-header" style="background-image: url('/img/zxl_4.png')">
+<nav id="nav"><span id="blog-info"><a href="/" title="花独柒"><span class="site-name">花独柒</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> Search</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fa fa-graduation-cap"></i><span> 博文</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fa fa-archive"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fa fa-folder-open"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 生活</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/shuoshuo/"><i class="fa-fw fa fa-comments-o"></i><span> 分享</span></a></li><li><a class="site-page child" href="/photos/"><i class="fa-fw fa fa-camera-retro"></i><span> 相册</span></a></li><li><a class="site-page child" href="/music/"><i class="fa-fw fa fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 影视</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/links/"><i class="fa-fw fa fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/comment/"><i class="fa-fw fa fa-paper-plane"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于笔者</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav>
+<div id="page-site-info"><h1 id="site-title">相册</h1></div>
+</header>
+<main class="layout" id="content-inner">
+<div id="page" class="photo-album-page">
+  <div class="album-header">
+    <h2>游颐和园</h2>
+    <div class="album-date"><i class="far fa-calendar-alt"></i> 2025-09-20</div>
+    <div class="album-desc">128 张照片</div>
+  </div>
+  <div class="gallery-grid">
+    
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920134351.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920134351.jpg" alt="游颐和园 - 1" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920142428.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920142428.jpg" alt="游颐和园 - 2" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920142816.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920142816.jpg" alt="游颐和园 - 3" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920142825.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920142825.jpg" alt="游颐和园 - 4" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920143103.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920143103.jpg" alt="游颐和园 - 5" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920143308.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920143308.jpg" alt="游颐和园 - 6" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920143510.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920143510.jpg" alt="游颐和园 - 7" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920143745.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920143745.jpg" alt="游颐和园 - 8" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920143925.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920143925.jpg" alt="游颐和园 - 9" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920143952.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920143952.jpg" alt="游颐和园 - 10" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920144101.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920144101.jpg" alt="游颐和园 - 11" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920144322.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920144322.jpg" alt="游颐和园 - 12" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920144343.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920144343.jpg" alt="游颐和园 - 13" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920144437.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920144437.jpg" alt="游颐和园 - 14" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920145321.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920145321.jpg" alt="游颐和园 - 15" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920145615.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920145615.jpg" alt="游颐和园 - 16" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920145643.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920145643.jpg" alt="游颐和园 - 17" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920145752.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920145752.jpg" alt="游颐和园 - 18" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920150204.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920150204.jpg" alt="游颐和园 - 19" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920150347.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920150347.jpg" alt="游颐和园 - 20" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920151202.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920151202.jpg" alt="游颐和园 - 21" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920151302.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920151302.jpg" alt="游颐和园 - 22" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920151321.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920151321.jpg" alt="游颐和园 - 23" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920151530.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920151530.jpg" alt="游颐和园 - 24" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920151609.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920151609.jpg" alt="游颐和园 - 25" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920151900.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920151900.jpg" alt="游颐和园 - 26" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920151946.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920151946.jpg" alt="游颐和园 - 27" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920152309.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920152309.jpg" alt="游颐和园 - 28" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920152440.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920152440.jpg" alt="游颐和园 - 29" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920152625.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920152625.jpg" alt="游颐和园 - 30" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920152647.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920152647.jpg" alt="游颐和园 - 31" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920153059.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920153059.jpg" alt="游颐和园 - 32" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920153311.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920153311.jpg" alt="游颐和园 - 33" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920153521.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920153521.jpg" alt="游颐和园 - 34" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920153714.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920153714.jpg" alt="游颐和园 - 35" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920153805.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920153805.jpg" alt="游颐和园 - 36" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920153832.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920153832.jpg" alt="游颐和园 - 37" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920153930.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920153930.jpg" alt="游颐和园 - 38" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920153958.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920153958.jpg" alt="游颐和园 - 39" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920154054.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920154054.jpg" alt="游颐和园 - 40" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920154058.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920154058.jpg" alt="游颐和园 - 41" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920154320.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920154320.jpg" alt="游颐和园 - 42" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920154811.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920154811.jpg" alt="游颐和园 - 43" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920154918.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920154918.jpg" alt="游颐和园 - 44" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920154942.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920154942.jpg" alt="游颐和园 - 45" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920154953.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920154953.jpg" alt="游颐和园 - 46" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920155052.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920155052.jpg" alt="游颐和园 - 47" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920155106.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920155106.jpg" alt="游颐和园 - 48" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920155143.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920155143.jpg" alt="游颐和园 - 49" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920155235.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920155235.jpg" alt="游颐和园 - 50" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920155248.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920155248.jpg" alt="游颐和园 - 51" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920155502.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920155502.jpg" alt="游颐和园 - 52" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920155527.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920155527.jpg" alt="游颐和园 - 53" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920155655.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920155655.jpg" alt="游颐和园 - 54" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920155700.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920155700.jpg" alt="游颐和园 - 55" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920155753.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920155753.jpg" alt="游颐和园 - 56" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920155816.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920155816.jpg" alt="游颐和园 - 57" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920160004.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920160004.jpg" alt="游颐和园 - 58" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920160138.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920160138.jpg" alt="游颐和园 - 59" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920160345.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920160345.jpg" alt="游颐和园 - 60" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920160422.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920160422.jpg" alt="游颐和园 - 61" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920160835.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920160835.jpg" alt="游颐和园 - 62" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920160851.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920160851.jpg" alt="游颐和园 - 63" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920161508.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920161508.jpg" alt="游颐和园 - 64" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920161608.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920161608.jpg" alt="游颐和园 - 65" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920161622.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920161622.jpg" alt="游颐和园 - 66" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920161744.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920161744.jpg" alt="游颐和园 - 67" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920162002.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920162002.jpg" alt="游颐和园 - 68" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920162104.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920162104.jpg" alt="游颐和园 - 69" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920162829.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920162829.jpg" alt="游颐和园 - 70" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920162958.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920162958.jpg" alt="游颐和园 - 71" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163035.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163035.jpg" alt="游颐和园 - 72" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163037.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163037.jpg" alt="游颐和园 - 73" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163047.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163047.jpg" alt="游颐和园 - 74" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163055.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163055.jpg" alt="游颐和园 - 75" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163244.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163244.jpg" alt="游颐和园 - 76" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163300.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163300.jpg" alt="游颐和园 - 77" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163320.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163320.jpg" alt="游颐和园 - 78" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163458.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163458.jpg" alt="游颐和园 - 79" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163517.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163517.jpg" alt="游颐和园 - 80" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163621.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163621.jpg" alt="游颐和园 - 81" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163629.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163629.jpg" alt="游颐和园 - 82" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163816.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163816.jpg" alt="游颐和园 - 83" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163852.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920163852.jpg" alt="游颐和园 - 84" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920164019.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920164019.jpg" alt="游颐和园 - 85" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920164111.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920164111.jpg" alt="游颐和园 - 86" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920164125.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920164125.jpg" alt="游颐和园 - 87" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920164129.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920164129.jpg" alt="游颐和园 - 88" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920164242.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920164242.jpg" alt="游颐和园 - 89" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920164313.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920164313.jpg" alt="游颐和园 - 90" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920164326.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920164326.jpg" alt="游颐和园 - 91" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920164430.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920164430.jpg" alt="游颐和园 - 92" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920164441.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920164441.jpg" alt="游颐和园 - 93" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920164628.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920164628.jpg" alt="游颐和园 - 94" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920164647.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920164647.jpg" alt="游颐和园 - 95" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920164718.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920164718.jpg" alt="游颐和园 - 96" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920165837.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920165837.jpg" alt="游颐和园 - 97" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920171149.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920171149.jpg" alt="游颐和园 - 98" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920171159.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920171159.jpg" alt="游颐和园 - 99" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920171258.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920171258.jpg" alt="游颐和园 - 100" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920171654.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920171654.jpg" alt="游颐和园 - 101" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920171812.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920171812.jpg" alt="游颐和园 - 102" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920171837.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920171837.jpg" alt="游颐和园 - 103" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920171940.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920171940.jpg" alt="游颐和园 - 104" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920172053.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920172053.jpg" alt="游颐和园 - 105" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920172111.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920172111.jpg" alt="游颐和园 - 106" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920172113.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920172113.jpg" alt="游颐和园 - 107" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920172153.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920172153.jpg" alt="游颐和园 - 108" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920172336.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920172336.jpg" alt="游颐和园 - 109" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920172426.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920172426.jpg" alt="游颐和园 - 110" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920172505.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920172505.jpg" alt="游颐和园 - 111" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920173044.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920173044.jpg" alt="游颐和园 - 112" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920174208.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920174208.jpg" alt="游颐和园 - 113" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920174458.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920174458.jpg" alt="游颐和园 - 114" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920182907.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920182907.jpg" alt="游颐和园 - 115" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920184022.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920184022.jpg" alt="游颐和园 - 116" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920185306.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920185306.jpg" alt="游颐和园 - 117" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920185928.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920185928.jpg" alt="游颐和园 - 118" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920190232.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920190232.jpg" alt="游颐和园 - 119" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920190235.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920190235.jpg" alt="游颐和园 - 120" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920190316.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920190316.jpg" alt="游颐和园 - 121" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920190456.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920190456.jpg" alt="游颐和园 - 122" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920191144.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920191144.jpg" alt="游颐和园 - 123" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920191205.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG20250920191205.jpg" alt="游颐和园 - 124" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG_20250920_190616.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG_20250920_190616.jpg" alt="游颐和园 - 125" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG_20250920_190718.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG_20250920_190718.jpg" alt="游颐和园 - 126" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG_20250920_190750.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG_20250920_190750.jpg" alt="游颐和园 - 127" />
+            </a>
+          </div>
+          <div class="gallery-item">
+            <a href="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG_20250920_190910.jpg" data-fancybox="gallery-%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD" data-caption="游颐和园">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/photos/%E6%B8%B8%E9%A2%90%E5%92%8C%E5%9B%AD/IMG_20250920_190910.jpg" alt="游颐和园 - 128" />
+            </a>
+          </div>
+  </div>
+</div>
+<div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/total.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">猪教授</div><div class="author-info__description">纸上谈来终觉浅，绝知此事要躬行</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">2</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Post</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/12/28/Zxl-first-blog/" title="Zxl_first-blog">Zxl_first-blog</a><time datetime="2023-12-28T08:34:04.000Z" title="Created 2023-12-28 16:34:04">2023-12-28</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/12/28/hello-world/" title="Hello World">Hello World</a><time datetime="2023-12-28T08:13:39.800Z" title="Created 2023-12-28 16:13:39">2023-12-28</time></div></div></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>Archives</span></div><div class="card-archives"><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/"><span class="card-archive-list-date">2023</span><span class="card-archive-list-count">2</span></a></li></ul></div></div></div></div>
+</main>
+<div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Read Mode"><i class="fas fa-book-open"></i></button><button id="font-plus" type="button" title="Increase Font Size"><i class="fas fa-plus"></i></button><button id="font-minus" type="button" title="Decrease Font Size"><i class="fas fa-minus"></i></button><button id="darkmode" type="button" title="Dark Mode"><i class="fas fa-moon"></i></button><button id="hide-aside-btn" type="button" title="Toggle Aside"><i class="fas fa-arrow-left"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Setting"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="go-up" type="button" title="Back to Top"><i class="fas fa-arrow-up"></i></button></div></div>
+<div>
+<script src="/js/utils.js"></script>
+<script src="/js/main.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload/dist/lazyload.iife.min.js"></script>
+<div class="js-pjax"></div>
+<script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">Search</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  Loading the Database</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="Search for Posts" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div>
+</div>
+</div>
+</body>
+</html>
