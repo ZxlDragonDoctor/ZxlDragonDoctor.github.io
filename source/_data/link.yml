@@ -1,0 +1,15 @@
+- class_name: 友情链接
+  class_desc: 一些值得推荐的朋友
+  link_list:
+    - name: Hexo
+      link: https://hexo.io/zh-cn/
+      avatar: /img/friend_404.gif
+      descr: 快速、简洁且高效的博客框架
+    - name: Butterfly
+      link: https://butterfly.js.org/
+      avatar: /img/friend_404.gif
+      descr: A Simple and Card UI Design theme for Hexo
+    - name: GitHub
+      link: https://github.com/ZxlDragonDoctor
+      avatar: /img/friend_404.gif
+      descr: 我的 GitHub 主页

@@ -1,0 +1,13 @@
+- date: 2023-12-28 16:35:00
+  author: 猪教授
+  content: 欢迎来到花独柒的博客，这里会分享一些生活日常和学习笔记。
+  tags:
+    - 欢迎
+  key: welcome
+
+- date: 2024-01-08 23:23:00
+  author: 猪教授
+  content: 纸上谈来终觉浅，绝知此事要躬行。共勉！
+  tags:
+    - 随笔
+  key: motto
