@@ -81,11 +81,11 @@ cover:
     - /img/zxl_1.jpg
     - /img/zxl_2.jpg
     - /img/zxl_3.png
-    - /img/zxl_4.png
+    - /img/zxl_4.jpg
     - /img/zxl_5.png
     - /img/zxl_6.jpg
     - /img/zxl_7.png
-    - /img/zxl_8.jpg
+    - /img/zxl_8.png
 
 error_img:
   flink: /img/friend_404.gif
