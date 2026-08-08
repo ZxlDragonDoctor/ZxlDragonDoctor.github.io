@@ -1,0 +1,1430 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>git | 花独柒</title><meta name="author" content="猪教授"><meta name="copyright" content="猪教授"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="git学习记录初始化仓库的两个方法 1git init 需要指定push的远程仓库:git remote add origin  URL  2.git clone 需要指定push的远程仓库:git remote add origin  URL 从远程仓库拉取代码和推送到远程仓库代码 1.git pull (origin) (分支名)  2.git push (origin) (分支名) 3.gi">
+<meta property="og:type" content="article">
+<meta property="og:title" content="git">
+<meta property="og:url" content="https://zxldragondoctor.github.io/2025/06/17/git/">
+<meta property="og:site_name" content="花独柒">
+<meta property="og:description" content="git学习记录初始化仓库的两个方法 1git init 需要指定push的远程仓库:git remote add origin  URL  2.git clone 需要指定push的远程仓库:git remote add origin  URL 从远程仓库拉取代码和推送到远程仓库代码 1.git pull (origin) (分支名)  2.git push (origin) (分支名) 3.gi">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://zxldragondoctor.github.io/img_posts/basic-rebase-3.png">
+<meta property="article:published_time" content="2025-06-17T14:51:45.000Z">
+<meta property="article:modified_time" content="2025-06-17T14:51:45.000Z">
+<meta property="article:author" content="猪教授">
+<meta property="article:tag" content="博客,个人博客,花独柒,猪教授,Hexo,Butterfly">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://zxldragondoctor.github.io/img/total.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "git",
+  "url": "https://zxldragondoctor.github.io/2025/06/17/git/",
+  "image": "https://zxldragondoctor.github.io/img_posts/basic-rebase-3.png",
+  "datePublished": "2025-06-17T14:51:45.000Z",
+  "dateModified": "2025-06-17T14:51:45.000Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "猪教授",
+      "url": "https://github.com/ZxlDragonDoctor"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/netoal.png"><link rel="canonical" href="https://zxldragondoctor.github.io/2025/06/17/git/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="manifest" href="/manifest.json"/><link rel="apple-touch-icon" sizes="180x180" href="/img/netoal.png"/><link rel="icon" type="image/png" sizes="32x32" href="/img/netoal.png"/><link rel="icon" type="image/png" sizes="16x16" href="/img/netoal.png"/><link rel="mask-icon" href="/img/netoal.png" color="#5bbad5"/><link rel="stylesheet" href="/css/index.css?v=5.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.3.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/node-snackbar@0.1.16/dist/snackbar.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        const data = { value }
+
+        if (ttl != null) {
+          data.expiry = Date.now() + ttl * 86400000
+        }
+
+        localStorage.setItem(key, JSON.stringify(data))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return
+
+        try {
+          const data = JSON.parse(itemStr)
+
+          if (data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(key)
+            return
+          }
+
+          return data.value
+        } catch {
+          localStorage.removeItem(key)
+        }
+      }
+    }
+
+    const scriptCache = new Map()
+    const cssCache = new Map()
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => {
+        if (scriptCache.has(url)) {
+          return scriptCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+
+          script.src = url
+          script.async = true
+
+          for (const key in attr) {
+            script.setAttribute(key, attr[key])
+          }
+
+          script.onload = resolve
+          script.onerror = reject
+
+          document.head.appendChild(script)
+        })
+
+        scriptCache.set(url, promise)
+
+        return promise
+      },
+      getCSS: (url, id) => {
+        if (cssCache.has(url)) {
+          return cssCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const link = document.createElement('link')
+
+          link.rel = 'stylesheet'
+          link.href = url
+
+          if (id) {
+            link.id = id
+          }
+
+          link.onload = resolve
+          link.onerror = reject
+
+          document.head.appendChild(link)
+        })
+
+        cssCache.set(url, promise)
+
+        return promise
+      },
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!true && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+      const activateDarkMode = () => {
+        document.documentElement.dataset.theme = 'dark'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.dataset.theme = 'light'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          const mediaQueryDark = window.matchMedia('(prefers-color-scheme: dark)')
+          const mediaQueryLight = window.matchMedia('(prefers-color-scheme: light)')
+
+          if (theme === undefined) {
+            if (mediaQueryLight.matches) activateLightMode()
+            else if (mediaQueryDark.matches) activateDarkMode()
+            else {
+              const hour = new Date().getHours()
+              const start = 6
+              const end = 18
+              const isNight =
+                start < end
+                    ? hour < start || hour >= end
+                    : hour >= start || hour < end
+              isNight ? activateDarkMode() : activateLightMode()
+            }
+            mediaQueryDark.addEventListener('change', e => {
+              if (saveToLocal.get('theme') === undefined) {
+                e.matches ? activateDarkMode() : activateLightMode()
+              }
+            })
+          } else {
+            theme === 'light' ? activateLightMode() : activateDarkMode()
+          }
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":true,"top_n_per_article":1,"unescape":false,"pagination":{"enable":true,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":true,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: {"limitCount":150,"languages":{"author":"作者: 猪教授","link":"链接: ","source":"来源: 花独柒","info":"著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。"}},
+  lightbox: 'fancybox',
+  Snackbar: {"chs_to_cht":"已切换为繁体中文","cht_to_chs":"已切换为简体中文","day_to_night":"已切换为深色模式","night_to_day":"已切换为浅色模式","bgLight":"#49b1f5","bgDark":"#1f1f1f","position":"bottom-left"},
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: true,
+  islazyloadPlugin: true,
+  isAnchor: true,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: true
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'git',
+  isHighlightShrink: true,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.2"><link rel="alternate" href="/atom.xml" title="花独柒" type="application/atom+xml">
+</head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><script>(()=>{
+  const $loadingBox = document.getElementById('loading-box')
+  const $body = document.body
+  const preloader = {
+    endLoading: () => {
+      if ($loadingBox.classList.contains('loaded')) return
+      $body.style.overflow = ''
+      $loadingBox.classList.add('loaded')
+    },
+    initLoading: () => {
+      $body.style.overflow = 'hidden'
+      $loadingBox.classList.remove('loaded')
+    }
+  }
+
+  preloader.initLoading()
+
+  if (document.readyState === 'complete') {
+    preloader.endLoading()
+  } else {
+    window.addEventListener('load', preloader.endLoading)
+    document.addEventListener('DOMContentLoaded', preloader.endLoading)
+    // Add timeout protection: force end after 7 seconds
+    setTimeout(preloader.endLoading, 7000)
+  }
+
+  if (true) {
+    btf.addGlobalFn('pjaxSend', preloader.initLoading, 'preloader_init')
+    btf.addGlobalFn('pjaxComplete', preloader.endLoading, 'preloader_end')
+  }
+})()</script><div class="bg-animation" id="web_bg" style="background-image: url(/img/wallhaven-1pq9kv.png);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/loading.jpg" data-lazy-src="/img/total.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">69</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">1</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 博文</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fa fa-archive"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fa fa-folder-open"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 生活</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/shuoshuo/"><i class="fa-fw fa fa-comments-o"></i><span> 分享</span></a></li><li><a class="site-page child" href="/photos/"><i class="fa-fw fa fa-camera-retro"></i><span> 相册</span></a></li><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 影视</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fa fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/comment/"><i class="fa-fw fa fa-paper-plane"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于笔者</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background-image: url(/img_posts/basic-rebase-3.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/loading.jpg" data-lazy-src="/img/netoal.png" alt="Logo"><span class="site-name">花独柒</span></a><a class="nav-page-title" href="/"><span class="site-name">git</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 博文</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fa fa-archive"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fa fa-folder-open"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 生活</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/shuoshuo/"><i class="fa-fw fa fa-comments-o"></i><span> 分享</span></a></li><li><a class="site-page child" href="/photos/"><i class="fa-fw fa fa-camera-retro"></i><span> 相册</span></a></li><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 影视</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fa fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/comment/"><i class="fa-fw fa fa-paper-plane"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于笔者</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">git<a class="post-edit-link" href="https://github.com/ZxlDragonDoctor/ZxlDragonDoctor.github.io/edit/main/source/_posts/git.md" title="编辑" target="_blank"><i class="fas fa-pencil-alt"></i></a></h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-06-17T14:51:45.000Z" title="发表于 2025-06-17 22:51:45">2025-06-17</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-06-17T14:51:45.000Z" title="更新于 2025-06-17 22:51:45">2025-06-17</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E7%AC%94%E8%AE%B0/">笔记</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">6.4k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>23分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><div id="post-outdate-notice" data="{&quot;limitDay&quot;:365,&quot;messagePrev&quot;:&quot;本文最后更新于&quot;,&quot;messageNext&quot;:&quot;天前，内容可能已过时，请知悉。&quot;,&quot;postUpdate&quot;:&quot;2025-06-17 22:51:45&quot;}" hidden></div><h1 id="git学习记录"><a href="#git学习记录" class="headerlink" title="git学习记录"></a>git学习记录</h1><p>初始化仓库的两个方法</p>
+<p>1<code>git init</code> 需要指定push的远程仓库:<code>git remote add origin  URL</code> </p>
+<p>2.<code>git clone </code>需要指定push的远程仓库:<code>git remote add origin  URL</code></p>
+<p>从远程仓库拉取代码和推送到远程仓库代码</p>
+<p>1.<code>git pull (origin) (分支名) </code></p>
+<p>2.<code>git push (origin) (分支名)</code></p>
+<p>3.<code>git fetch (origin) (分支名)</code></p>
+<p>ssh公钥方式连接远程仓库</p>
+<p>设置用户签名</p>
+<p><code>git config --global user.name</code> “yorname”设置用户签名<br><code>git config --global user.email your_email@youremail.com </code>    设置用户签名</p>
+<p>生成密钥(SSH key)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh-keygen -t rsa -C &quot;your_email@youremail.com     &quot;-t&quot; 代表公钥的类型，&quot;-C&quot;为注释 </span><br></pre></td></tr></table></figure>
+
+<p>生成的公钥文件在你C盘用户目录下.ssh文件下，可以看到id_rsa.pub的文件，赋值上面的内容到代码托管平台上添加ssh密钥的位置即可</p>
+<h2 id="一-修改提交信息"><a href="#一-修改提交信息" class="headerlink" title="一.修改提交信息"></a>一.修改提交信息</h2><h3 id="1-修改提交信息"><a href="#1-修改提交信息" class="headerlink" title="1. 修改提交信息"></a>1. 修改提交信息</h3><p>如果你刚刚提交了更改，但想要修改提交信息，可以使用：</p>
+<p>bash</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git commit --amend -m <span class="string">&quot;新的提交信息&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>这将打开一个编辑器，让你修改提交信息。</p>
+<h3 id="2-添加更多更改到上次提交"><a href="#2-添加更多更改到上次提交" class="headerlink" title="2. 添加更多更改到上次提交"></a>2. 添加更多更改到上次提交</h3><p>如果你在提交后进行了更多的更改，并且想要将这些更改添加到上次提交中，而不是创建一个新的提交，可以这样做：</p>
+<p>bash</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git add &lt;更改的文件&gt;</span><br><span class="line">git commit --amend --no-edit</span><br></pre></td></tr></table></figure>
+
+<p>这里 <code>--no-edit</code> 选项表示不更改提交信息，直接使用上次的提交信息</p>
+<p>###3.<strong>要修改已推送到远程仓库的提交</strong></p>
+<ol>
+<li><p><strong>修改本地提交</strong>：使用 <code>git commit --amend</code> 命令来修改最近一次提交。这会打开一个编辑器，允许你修改提交信息。</p>
+</li>
+<li><p><strong>强制推送到远程仓库</strong>：由于你已经修改了最近一次提交，需要使用 <code>git push --force</code> 命令将修改后的提交推送到远程仓库。注意，这里使用了 <code>--force</code> 选项来覆盖远程仓库中的提交记录。</p>
+</li>
+<li><p><strong>注意事项</strong>：使用 <code>--force</code> 选项会强制更新远程分支，使其与你的本地分支状态完全一致。这意味着如果你或他人在此期间有其他提交到远程，它们将被你的这次推送覆盖。因此，除非你确信没有其他人在此期间推送到该分支，否则应谨慎使用 <code>--force</code>。</p>
+</li>
+<li><p>**推荐使用 <code>--force-with-lease</code>**：为了更安全地强制推送，可以使用 <code>git push --force-with-lease</code>。它会在推送前检查远程分支的状态是否与你预期的一致。如果远程分支在你上次拉取后有其他人的新提交，推送会失败，从而避免意外覆盖他人的工作。</p>
+</li>
+</ol>
+<h3 id="4-提交删除的文件"><a href="#4-提交删除的文件" class="headerlink" title="4.提交删除的文件"></a>4.提交删除的文件</h3><p>1.<code>git rm &#39;path/file&#39; </code><br>2.<code>git commit -m &#39;提交信息&#39; </code><br>3.<code>git push</code></p>
+<h2 id="二、修改指定文件的提交信息（已推送）"><a href="#二、修改指定文件的提交信息（已推送）" class="headerlink" title="二、修改指定文件的提交信息（已推送）"></a>二、修改指定文件的提交信息（已推送）</h2><p>这里的方法是通过<strong>手动拆分</strong>和<strong>重新提交</strong>，与指定文件夹相关的提交信息重新组织历史。以下是详细步骤：</p>
+<hr>
+<h3 id="具体场景说明"><a href="#具体场景说明" class="headerlink" title="具体场景说明"></a>具体场景说明</h3><p>假设有一个文件夹 <code>src</code>，你希望修改它的相关提交信息，其他文件夹的提交信息保持不变。</p>
+<hr>
+<h3 id="详细步骤"><a href="#详细步骤" class="headerlink" title="详细步骤"></a>详细步骤</h3><h4 id="1-备份当前仓库"><a href="#1-备份当前仓库" class="headerlink" title="1. 备份当前仓库"></a>1. <strong>备份当前仓库</strong></h4><p>在进行历史修改之前，创建一个安全备份分支：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git branch backup</span><br></pre></td></tr></table></figure>
+
+<p>这样可以随时恢复到原始状态。</p>
+<hr>
+<h4 id="2-查找与指定文件夹相关的提交"><a href="#2-查找与指定文件夹相关的提交" class="headerlink" title="2. 查找与指定文件夹相关的提交"></a>2. <strong>查找与指定文件夹相关的提交</strong></h4><p>运行以下命令以筛选出与目标文件夹相关的提交：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">log</span> --oneline -- &lt;folder_path&gt;</span><br></pre></td></tr></table></figure>
+
+<p>例如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">log</span> --oneline -- src</span><br></pre></td></tr></table></figure>
+
+<p>这将输出类似以下内容：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">abc1234 Fix: Bug in src module</span><br><span class="line">def5678 Refactor: Updated src structure</span><br><span class="line">ghi9012 Initial commit for src</span><br></pre></td></tr></table></figure>
+
+<p>记下相关提交的哈希值。</p>
+<hr>
+<h4 id="3-交互式-rebase-定位提交"><a href="#3-交互式-rebase-定位提交" class="headerlink" title="3. 交互式 rebase 定位提交"></a>3. <strong>交互式 rebase 定位提交</strong></h4><p>使用 <code>git rebase</code> 将历史分解为可编辑状态：</p>
+<p>运行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rebase -i &lt;starting_commit_hash&gt;^</span><br></pre></td></tr></table></figure>
+
+<p>如果你只需要修改最近 3 次提交：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rebase -i HEAD~3</span><br></pre></td></tr></table></figure>
+
+<p>进入编辑器后，你会看到提交历史，例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">pick abc1234 Fix: Bug in src module</span><br><span class="line">pick def5678 Refactor: Updated src structure</span><br><span class="line">pick ghi9012 Initial commit for src</span><br></pre></td></tr></table></figure>
+
+<p>将涉及 <code>src</code> 文件夹的提交标记为 <code>edit</code>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">pick abc1234 Fix: Bug in src module</span><br><span class="line">edit def5678 Refactor: Updated src structure</span><br><span class="line">pick ghi9012 Initial commit for src</span><br></pre></td></tr></table></figure>
+
+<p>保存并退出。</p>
+<hr>
+<h4 id="4-拆分与目标文件夹无关的修改"><a href="#4-拆分与目标文件夹无关的修改" class="headerlink" title="4. 拆分与目标文件夹无关的修改"></a>4. <strong>拆分与目标文件夹无关的修改</strong></h4><p>Git 会暂停在标记为 <code>edit</code> 的提交上，你可以拆分内容。</p>
+<ol>
+<li><p><strong>检查提交内容：</strong> 查看该提交改动：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git show</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>重置提交到暂存区：</strong> 将当前提交的内容重置为未提交状态：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git reset HEAD~</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>暂存指定文件夹的更改：</strong> 只将 <code>src</code> 文件夹相关的改动添加到暂存区：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git add src</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>创建新的提交：</strong> 提交新的信息：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git commit -m <span class="string">&quot;New message for src folder&quot;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>提交其他更改：</strong> 将剩余未暂存的文件提交回去：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git add .</span><br><span class="line">git commit -m <span class="string">&quot;Other unrelated changes&quot;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>继续 rebase：</strong> 完成拆分后，继续 rebase：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rebase --<span class="built_in">continue</span></span><br></pre></td></tr></table></figure></li>
+</ol>
+<hr>
+<h4 id="5-重复操作"><a href="#5-重复操作" class="headerlink" title="5. 重复操作"></a>5. <strong>重复操作</strong></h4><p>对于所有标记为 <code>edit</code> 的提交，重复上述步骤，直到完成。</p>
+<hr>
+<h4 id="6-强制推送更改"><a href="#6-强制推送更改" class="headerlink" title="6. 强制推送更改"></a>6. <strong>强制推送更改</strong></h4><p>完成所有修改后，需要强制推送到远程仓库：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git push --force</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="示例操作流程"><a href="#示例操作流程" class="headerlink" title="示例操作流程"></a>示例操作流程</h3><p>假设 <code>src</code> 文件夹的某个提交信息需要修改：</p>
+<ol>
+<li>当前提交内容：<ul>
+<li>修改了 <code>src/main.c</code>。</li>
+<li>修改了 <code>README.md</code>。</li>
+</ul>
+</li>
+<li>通过 <code>git reset</code> 和 <code>git add</code> 拆分：<ul>
+<li><code>git add src</code> -&gt; 提交 <code>src</code> 文件的改动，修改提交信息。</li>
+<li><code>git add README.md</code> -&gt; 提交其他文件的改动。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h3><ol>
+<li><strong>操作环境</strong>：确保团队成员没有并行修改提交历史，避免冲突。</li>
+<li><strong>备份</strong>：始终在操作前备份分支，避免数据丢失。</li>
+<li><strong>强制推送</strong>：所有历史变更都需要 <code>git push --force</code>（这是不安全的），务必与团队沟通。</li>
+</ol>
+<h2 id="三、要连接到其他-Git-仓库，您可以使用以下步骤："><a href="#三、要连接到其他-Git-仓库，您可以使用以下步骤：" class="headerlink" title="三、要连接到其他 Git 仓库，您可以使用以下步骤："></a>三、要连接到其他 Git 仓库，您可以使用以下步骤：</h2><ol>
+<li><p><strong>查找或创建新的远程仓库</strong>：</p>
+<ul>
+<li>如果您想要连接到一个已经存在的仓库，您需要知道该仓库的 URL。</li>
+<li>如果您想要创建一个新的远程仓库，您可以在 GitHub、GitLab、Bitbucket 或其他 Git 托管服务上创建一个新的仓库，并获取该仓库的 URL。</li>
+</ul>
+</li>
+<li><p><strong>使用 <code>git remote add</code> 命令添加远程仓库</strong>：</p>
+<ul>
+<li><p>打开终端或命令行界面。</p>
+</li>
+<li><p>切换到您的本地 Git 仓库目录。</p>
+</li>
+<li><p>执行以下命令来添加一个新的远程仓库：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git remote add &lt;remote-name&gt; &lt;repository-url&gt;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>其中 <code>&lt;remote-name&gt;</code> 是您为远程仓库起的别名（通常是 <code>origin</code>，但也可以是任何其他名称），而 <code>&lt;repository-url&gt;</code> 是远程仓库的 URL。</p>
+</li>
+</ul>
+<p>例如，如果您想要将远程仓库别名设置为 <code>upstream</code> 并连接到一个名为 <code>https://github.com/other-user/other-repo.git</code> 的仓库，您可以执行：</p>
+  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git remote add upstream https://github.com/other-user/other-repo.git</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>验证远程仓库</strong>：</p>
+<ul>
+<li>使用 <code>git remote -v</code> 命令来查看所有远程仓库的 URL，确保新的远程仓库已经被正确添加。</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git remote -v</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>从远程仓库拉取代码</strong>：</p>
+<ul>
+<li>如果您想要从新添加的远程仓库拉取代码，可以使用 <code>git fetch</code> 命令：</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git fetch &lt;remote-name&gt;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>这会将远程仓库的代码拉取到您的本地仓库，但不会自动合并到您的当前分支。</li>
+</ul>
+</li>
+<li><p><strong>合并代码</strong>：</p>
+<ul>
+<li>如果您想要将远程仓库的代码合并到您的本地分支，可以使用 <code>git merge</code> 命令：</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git merge &lt;remote-name&gt;/branch-name</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>替换 <code>branch-name</code> 为远程仓库中您想要合并的分支名称。</li>
+</ul>
+</li>
+<li><p><strong>git删除远程仓库连接</strong>：</p>
+</li>
+</ol>
+<ul>
+<li><p>使用<code>git remote rm &lt;仓库名&gt;</code>命令，例如<code>git remote rm origin</code>可以删除名为origin的远程仓库。</p>
+</li>
+<li><p>使用<code>git remote remove &lt;仓库名&gt;</code>命令，例如<code>git remote remove origin</code>也可以删除名为origin的远程仓库。</p>
+</li>
+<li><p>使用<code>git remote prune &lt;仓库名&gt;</code>命令，例如<code>git remote prune origin</code>可以删除名为origin的远程仓库。</p>
+</li>
+<li><p>使用<code>git remote rm --all</code>命令可以删除所有远程仓库。</p>
+</li>
+</ul>
+<ol start="6">
+<li><p><strong>git修改连接的远程仓库的别名</strong>：<br>  使用<code>git remote rename &lt;old_name&gt; &lt;new_name&gt;</code>命令将指定的旧别名修改为新别名</p>
+</li>
+<li><p><strong>提交到远程不同仓库</strong></p>
+<p><code>git push 自定义仓库名 分支名</code></p>
+</li>
+<li><p><strong>git查看关联的远程库</strong></p>
+<p>要查看当前 Git 仓库关联的远程仓库，可以使用以下命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git remote -v</span><br></pre></td></tr></table></figure>
+
+<p>这将列出所有远程仓库及其URL。</p>
+<p>如果你只想查看远程仓库的简要信息，可以使用：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git remote</span><br></pre></td></tr></table></figure>
+
+<p>这将列出所有远程仓库的名称。</p>
+</li>
+</ol>
+<h2 id="四、git撤销记录"><a href="#四、git撤销记录" class="headerlink" title="四、git撤销记录"></a>四、git撤销记录</h2><p>###git 如何撤销commit记录</p>
+<p>要撤销最后一次commit但保留更改，可以使用：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git reset --soft HEAD^</span><br></pre></td></tr></table></figure>
+
+<p>如果要撤销commit并且也撤销更改（慎用，这会丢失代码更改），可以使用：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git reset --hard HEAD^</span><br></pre></td></tr></table></figure>
+
+<p>如果需要撤销特定的一个commit（不是最后一个），你需要先找到那个commit的哈希值，然后使用：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git reset --soft &lt;commit_hash&gt;^</span><br><span class="line"><span class="comment"># 或者</span></span><br><span class="line">git reset --hard &lt;commit_hash&gt;^</span><br></pre></td></tr></table></figure>
+
+<p>替换<code>&lt;commit_hash&gt;</code>为你想要撤销的commit的哈希值。</p>
+<p>注意：使用<code>--hard</code>选项会丢失所有未提交的更改，请谨慎操作。如果需要保留更改而不是撤销commit，请使用<code>--soft</code>选项。</p>
+<hr>
+<p>###git 如何撤销add记录</p>
+<p>要撤销<code>git add</code>添加到暂存区的文件，可以使用<code>git reset</code>命令。具体的命令取决于你要撤销添加的文件是单个文件还是多个文件。</p>
+<p>撤销单个文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git reset &lt;file&gt;</span><br></pre></td></tr></table></figure>
+
+<p>撤销多个文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git reset &lt;file1&gt; &lt;file2&gt; ...</span><br></pre></td></tr></table></figure>
+
+<p>撤销所有文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git reset</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<p>##五、git本地master分支推送到远程main分支<br>如果你在本地使用的是 master 分支，而远程仓库使用的是 main 分支，那么需要进行一些设置才能将本地的 master 分支推送到远程的 main 分支。</p>
+<p>一种简单的方法是，在本地使用 git branch -m 命令将本地的 master 分支重命名为 main 分支，然后再将其推送到远程仓库。具体步骤如下：</p>
+<ol>
+<li><p><strong>检查本地分支：</strong><br><code>git branch</code><br>你应该能看到 master 分支。</p>
+</li>
+<li><p><strong>将本地的 master 分支重命名为 main 分支：</strong><br><code>git branch -m master main</code></p>
+</li>
+<li><p><strong>推送本地 main 分支到远程仓库：</strong><br><code>git push -u origin main</code><br>上述命令会将本地的 main 分支推送到远程的 main 分支，并且在远程仓库中创建一个新的 main 分支（如果该分支不存在）。</p>
+</li>
+<li><p><strong>如果你想删除在远程仓库中的 master 分支，可以运行以下命令：</strong></p>
+</li>
+</ol>
+<p><code>git push origin :master</code><br>上述命令会将一个空分支推送到远程仓库的 master 分支，从而删除该分支。</p>
+<p>注意：在重命名本地分支和推送到远程仓库之前，请确保没有其他人正在共享该仓库，并且你的代码没有在其他地方被引用或依赖。</p>
+<h2 id="六、常见报错"><a href="#六、常见报错" class="headerlink" title="六、常见报错"></a>六、常见报错</h2><ol>
+<li><strong>报错：fatal: refusing to merge unrelated histories</strong></li>
+</ol>
+<p>在执行 <code>git pull</code> 时出现 <code>fatal: refusing to merge unrelated histories</code> 错误，这是因为本地仓库和远程仓库的提交历史（history）不相关，Git 默认拒绝合并不相关的历史。</p>
+<p><strong>解决方法</strong></p>
+<p>可以通过添加 <code>--allow-unrelated-histories</code> 参数强制合并不同历史：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git pull movie_app main --allow-unrelated-histories </span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li><strong>报错：fatal: The current branch master has no upstream branch.</strong><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">     fatal: The current branch master has no upstream branch.</span><br><span class="line">     To push the current branch and set the remote as upstream, use</span><br><span class="line"></span><br><span class="line">       git push --set-upstream origin master</span><br><span class="line"></span><br><span class="line">   To have this happen automatically for branches without a tracking</span><br><span class="line">   upstream, see &#x27;push.autoSetupRemote&#x27; in &#x27;git help config&#x27;.</span><br><span class="line">`````</span><br><span class="line"></span><br><span class="line">这段提示是 Git 在执行某些操作时发出的，意思是当前分支 `master` 没有设置上游分支（即远程分支）。以下是它的含义和解决方法：</span><br><span class="line"></span><br><span class="line">2.1  **问题解释**</span><br><span class="line"></span><br><span class="line">1. **上游分支（Upstream Branch）**：  </span><br><span class="line">   在 Git 中，本地分支可以与远程分支关联，这种关联关系称为“上游分支”。当你从远程仓库克隆代码时，Git 会自动设置本地分支与远程分支的关联关系。例如，`master` 分支通常会与远程仓库的 `origin/master` 关联。</span><br><span class="line"></span><br><span class="line">2. **没有上游分支的原因**：  </span><br><span class="line">   - 可能是本地分支是新创建的，还没有推送到远程仓库。</span><br><span class="line">   - 或者本地分支是从其他分支创建的，但没有设置与远程分支的关联。</span><br><span class="line"></span><br><span class="line">3. **提示内容的含义**：  </span><br><span class="line">   - Git 建议你使用命令 `git push --set-upstream origin master`，将本地的 `master` 分支推送到远程仓库，并设置远程分支 `origin/master` 作为上游分支。</span><br><span class="line">   - 它还提到可以通过配置 `push.autoSetupRemote` 来自动设置这种关联关系。</span><br><span class="line"></span><br><span class="line">2.2  **解决方法**</span><br><span class="line"></span><br><span class="line">**方法 1：手动设置上游分支**</span><br><span class="line">运行以下命令，将本地分支推送到远程仓库，并设置上游分支：</span><br><span class="line"></span><br><span class="line">```bash</span><br><span class="line">git push --set-upstream origin master</span><br></pre></td></tr></table></figure>
+这个命令会：</li>
+<li>将本地的 <code>master</code> 分支推送到远程仓库的 <code>origin/master</code>。</li>
+<li>设置本地分支与远程分支的关联关系。</li>
+</ol>
+<p> <strong>方法 2：自动设置上游分支</strong><br>如果你希望 Git 在推送时自动设置上游分支，可以配置 <code>push.autoSetupRemote</code>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git config --global push.autoSetupRemote origin</span><br></pre></td></tr></table></figure>
+<p>这样，当你下次推送分支时，Git 会自动设置上游分支。</p>
+<p><strong>方法 3：检查当前分支状态</strong><br>如果你不确定当前分支的状态，可以运行以下命令查看：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git branch -vv</span><br></pre></td></tr></table></figure>
+<p>这会显示本地分支及其关联的远程分支信息。如果某个分支没有关联远程分支，你会看到类似 <code>[]</code> 的空值。</p>
+<p><strong>注意事项</strong></p>
+<ol>
+<li>如果你使用的是 <code>main</code> 分支（而不是 <code>master</code>），请将命令中的 <code>master</code> 替换为 <code>main</code>。</li>
+<li>如果你不确定远程仓库的名称（默认是 <code>origin</code>），可以用 <code>git remote -v</code> 查看远程仓库的名称和地址。</li>
+</ol>
+<h2 id="七、常用命令"><a href="#七、常用命令" class="headerlink" title="七、常用命令"></a>七、常用命令</h2><ol>
+<li><p>查看当前文件状态<br><code>git status</code><br><code>git status -s| --short</code>  简介的展示文件状态,例如</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br></pre></td><td class="code"><pre><span class="line">	$ git status -s</span><br><span class="line">	 M README</span><br><span class="line">	MM Rakefile</span><br><span class="line">	A  lib/git.rb</span><br><span class="line">	M  lib/simplegit.rb</span><br><span class="line">	?? LICENSE.txt</span><br><span class="line">	`````</span><br><span class="line">	</span><br><span class="line"></span><br><span class="line">​	输出结果：左栏有两列，第一列指明了**暂存区的状态**，第二列指明了**工作区的状态**（新添加的未跟踪文件前面有 `??` 标记，新添加到暂存区中的文件前面有 `A` 标记，修改过的文件前面有 `M` 标记)，右栏指相应文件。</span><br><span class="line"></span><br><span class="line">**常见输出**</span><br><span class="line"></span><br><span class="line">`Untracked files` : 未跟踪的文件</span><br><span class="line"></span><br><span class="line">`Changes to be committed`： 已暂存状态</span><br><span class="line"></span><br><span class="line">`Changes not staged for commit`(未暂存清单) : 说明已跟踪文件的内容发生了变化，但还没有放到暂存区。 要暂存这次更新,需要运行 `git add` 命令.</span><br><span class="line"></span><br><span class="line">---</span><br><span class="line"></span><br><span class="line">2. 查看已暂存和未暂存的修改</span><br><span class="line"></span><br><span class="line">​		`git diff`  此命令比较的是工作目录中当前文件和暂存区域快照之间的差异。 也就是修改之后还没有暂存起来的变化内容</span><br><span class="line"></span><br><span class="line">​        `git diff -staged` 查看已暂存的将要添加到下次提交里的内容</span><br><span class="line"></span><br><span class="line">​		`git diff --cached` 查看已经暂存起来的变化</span><br><span class="line"></span><br><span class="line">-----</span><br><span class="line"></span><br><span class="line">3. 提交记录</span><br><span class="line"></span><br><span class="line">   `git commit`</span><br><span class="line"></span><br><span class="line">   `git commit -a` :给 `git commit` 加上 `-a` 选项，Git 就会自动把所有已经跟踪过的文件暂存起来一并提交，从而跳过 `git add` 步骤</span><br><span class="line"></span><br><span class="line">-----</span><br><span class="line"></span><br><span class="line">4. 移除文件（从暂存区域移除）</span><br><span class="line"></span><br><span class="line">   `git rm`   一定要提交此次删除才能从暂存区域移除文件(同时删除工作目录的文件)</span><br><span class="line"></span><br><span class="line">   `git rm --cached`  把文件从 Git 仓库中删除（亦即从暂存区域移除），但仍然希望保留在当前工作目录中（不会删除工作目录上的文件）</span><br><span class="line"></span><br><span class="line">   ----</span><br><span class="line"></span><br><span class="line">5. 查看提交日志</span><br><span class="line"></span><br><span class="line">    **`git log`**</span><br><span class="line"></span><br><span class="line">    作用:查看提交记录</span><br><span class="line"></span><br><span class="line">    命令形式：`git log [option]`</span><br><span class="line"></span><br><span class="line">    `options:`</span><br><span class="line"></span><br><span class="line">    - --all 显示所有分支</span><br><span class="line"></span><br><span class="line">    - --pretty=oneline 将提交信息显示为一行</span><br><span class="line"></span><br><span class="line">    - --abbrev-commit 使得输出的commitId更简短</span><br><span class="line"></span><br><span class="line">    - --graph 以图的形式显示</span><br><span class="line"></span><br><span class="line">    - --pretty=format 定制记录的显示格式</span><br><span class="line"></span><br><span class="line">    常用命令</span><br><span class="line"></span><br><span class="line">    `git log --online` </span><br><span class="line"></span><br><span class="line">    `git log --graph`</span><br><span class="line">    </span><br><span class="line">    `git log -p | -patch  -N` 查看最近N次提交，附带显示每次提交的差异</span><br><span class="line">    </span><br><span class="line">    `git log -stat` 在每次提交的下面列出所有被修改过的文件、有多少文件被修改了以及被修改过的文件的哪些行被移除或是添加了。 在每次提交的最后还有一个总结.</span><br><span class="line"></span><br><span class="line">----</span><br><span class="line"></span><br><span class="line">2. ​	撤销操作</span><br><span class="line"></span><br><span class="line">   `git commit -amend` 修改最近一次提交的提交信息,本质上是**新的提交** 替换旧的提交</span><br><span class="line"></span><br><span class="line">   `git reset HEAD &lt;file&gt;`  指定取消暂存区的某个文件</span><br><span class="line"></span><br><span class="line">   ` git checkout — &lt;file&gt;`  ：**撤消对文件的修改** -》 对那个文件在本地的任何修改都会消失——Git 会用最近提交的版本覆盖掉它</span><br><span class="line"></span><br><span class="line">   ----</span><br><span class="line"></span><br><span class="line">2.  远程仓库</span><br><span class="line"></span><br><span class="line">   `git remote ` 只列举远程仓库名</span><br><span class="line"></span><br><span class="line">   `git remote -v` 列举远程仓库名,同时显示与其对应的URL</span><br><span class="line"></span><br><span class="line">   `git remote add &lt;shortname&gt; &lt;url&gt;`  添加远程仓库</span><br><span class="line"></span><br><span class="line">   **从远程仓库中抓取与拉取**  </span><br><span class="line"></span><br><span class="line">      - `git  fetch &lt;remote&gt; ` 只会将数据下载到你的本地仓库——它并不会自动合并或修改你当前的工作</span><br><span class="line">      - `git pull` 自动抓取后合并该远程分支到当前分支,前提是你的当前分支设置了跟踪远程分支</span><br><span class="line"></span><br><span class="line">   `git push &lt;remote&gt; &lt;branch&gt;`  推送到远程仓库</span><br><span class="line"></span><br><span class="line">​		`git remote show &lt;remote&gt;`  查看某一个远程仓库的更多信息</span><br><span class="line"></span><br><span class="line">&gt; **它同样会列出远程仓库的 URL 与跟踪分支的信息。 这些信息非常有用，它告诉你正处于 `master` 分支，并且如果运行 `git pull`， 就会抓取所有的远程引用，然后将远程 `master` 分支合并到本地 `master` 分支。 它也会列出拉取到的所有远程引用。**</span><br><span class="line"></span><br><span class="line">​		`git remote rename &lt;oldName&gt; &lt;newName&gt;`   远程仓库的重命名</span><br><span class="line"></span><br><span class="line">​		`git remote remove | rm &lt;remoteName&gt;` 远程仓库的移除</span><br><span class="line"></span><br><span class="line">-----</span><br><span class="line"></span><br><span class="line">4. 打标签（人们会使用这个功能来标记发布结点）</span><br><span class="line"></span><br><span class="line">   `git tag [-l | --list ]`   列出已有的标签</span><br><span class="line"></span><br><span class="line">   **创建标签** </span><br><span class="line"></span><br><span class="line">   - 轻量标签  `git tag &lt;tagName&gt;` </span><br><span class="line">   - 附属标签 `git tag -a &lt;tagName&gt;-m &quot;&lt;message&gt;&quot;` </span><br><span class="line"></span><br><span class="line">    后期打标签  `git tag -a &lt;tagName&gt; &lt;散列值&gt;`  对过去的提交打标签，散列值可以使用`git log`查看</span><br><span class="line"></span><br><span class="line">   &gt; 共享标签 :`git push` 命令并不会传送标签到远程仓库服务器上。 在创建完标签后你必须显式地推送标签到共享服务器上。 这个过程就像共享远程分支一样——你可以运行 `git push origin &lt;tagname&gt;`如果想要一次性推送很多标签，也可以使用带有 `--tags` 选项的 `git push` 命令。 这将会把所有不在远程仓库服务器上的标签全部传送到那里</span><br><span class="line"></span><br><span class="line">   **删除标签**</span><br><span class="line"></span><br><span class="line">   `git tag -d &lt;tagname&gt;`  删除掉本地仓库上的标签</span><br><span class="line">   </span><br><span class="line">    删除远程仓库标签:  </span><br><span class="line">   </span><br><span class="line">    - `git push &lt;remote&gt; :refs/tags/&lt;tagname&gt;`</span><br><span class="line">   </span><br><span class="line">    - `git push origin --delete &lt;tagName&gt;`</span><br><span class="line"></span><br><span class="line">&gt;  ​	**检出标签**</span><br><span class="line">&gt;</span><br><span class="line">&gt; 如果你想查看某个标签所指向的文件版本，可以使用 `git checkout` 命令， 虽然这会使你的仓库处于“分离头指针（detached HEAD）”的状态——这个状态有些不好的副作用：</span><br><span class="line">&gt;</span><br><span class="line">&gt; ```console</span><br><span class="line">&gt; $ git checkout 2.0.0</span><br><span class="line">&gt; Note: checking out &#x27;2.0.0&#x27;.</span><br><span class="line">&gt; </span><br><span class="line">&gt; You are in &#x27;detached HEAD&#x27; state. You can look around, make experimental</span><br><span class="line">&gt; changes and commit them, and you can discard any commits you make in this</span><br><span class="line">&gt; state without impacting any branches by performing another checkout.</span><br><span class="line">&gt; </span><br><span class="line">&gt; If you want to create a new branch to retain commits you create, you may</span><br><span class="line">&gt; do so (now or later) by using -b with the checkout command again. Example:</span><br><span class="line">&gt; </span><br><span class="line">&gt;   git checkout -b &lt;new-branch&gt;</span><br><span class="line">&gt; </span><br><span class="line">&gt; HEAD is now at 99ada87... Merge pull request #89 from schacon/appendix-final</span><br><span class="line">&gt; </span><br><span class="line">&gt; $ git checkout 2.0-beta-0.1</span><br><span class="line">&gt; Previous HEAD position was 99ada87... Merge pull request #89 from schacon/appendix-final</span><br><span class="line">&gt; HEAD is now at df3f601... add atlas.json and cover image</span><br></pre></td></tr></table></figure></li>
+</ol>
+<blockquote>
+<p>在“分离头指针”状态下，如果你做了某些更改然后提交它们，标签不会发生变化， 但你的新提交将不属于任何分支，并且将无法访问，除非通过确切的提交哈希才能访问。 因此，如果你需要进行更改，比如你要修复旧版本中的错误，那么通常需要创建一个新分支：</p>
+<figure class="highlight console"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">git checkout -b version2 v2.0.0</span></span><br><span class="line">Switched to a new branch &#x27;version2&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>如果在这之后又进行了一次提交，<code>version2</code> 分支就会因为这个改动向前移动， 此时它就会和 <code>v2.0.0</code> 标签稍微有些不同，这时就要当心了。</p>
+</blockquote>
+<hr>
+<ol start="5">
+<li>Git 别名</li>
+</ol>
+<p>   <code>git config --global alias.&lt;别名&gt; &#39;&lt;git子命令&#39;&gt;</code>  </p>
+<p>   <code>git config --global alias.&lt;别名&gt; &#39;!命令&#39;</code></p>
+<hr>
+<ol start="6">
+<li><strong>版本回退(版本穿梭)</strong></li>
+</ol>
+<p>(1) <code>git reset</code></p>
+<ul>
+<li><p>命令形式：git reset –hard commitID</p>
+<p>commitID 可以使用 git-log 或 git log 指令查看</p>
+</li>
+<li><p>如何查看已经删除的记录？</p>
+</li>
+</ul>
+<p>​       <code>git reflog</code><strong>这个指令可以看到已经删除的提交记录</strong></p>
+<p>(2) <code>git reset --hard(--soft或--mixed)</code></p>
+<ul>
+<li>–hard : 本地仓库、暂存区、工作区都回退版本</li>
+<li>– soft: 只有本地仓库回退，暂存区和工作区不会回退</li>
+<li>–mixed:这是默认操作，本地仓库和暂存区回退，工作区不会改变</li>
+</ul>
+<hr>
+<ol start="7">
+<li><strong><span style="color: red">分支</span></strong></li>
+</ol>
+<p>​		<code>git branch  &lt;brachName&gt;</code> 新建分支</p>
+<p>​		<code>git checkout &lt;brachName&gt;</code>   切换分支</p>
+<p>​		<code>git checkout -b &lt;branchName&gt;</code> 新建分支并切换到该分支</p>
+<p>​		<code>git branch -d &lt;branchName&gt;</code> 删除分支</p>
+<p>​		<code>git merge &lt;branchName&gt;</code> 合并其他分支到当前分支</p>
+<p>​		<code>git branch</code> 得到当前所有分支的一个列表</p>
+<p>​		<code>git branch -v</code> 查看每一个分支的最后一次提交</p>
+<p>​		<code>git branch --merged</code> 查看哪些分支已经合并到当前分支</p>
+<p>​		<code>git branch --no-merged</code>   查看所有包含未合并工作的分支</p>
+<hr>
+<blockquote>
+<pre><code>  **遇到冲突时的分支合并**
+
+  在合并冲突后的任意时刻使用 `git status` 命令来查看那些因包含合并冲突而处于未合并（unmerged）状态的文件：
+
+  <figure class="highlight console"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">git status</span></span><br><span class="line">On branch master</span><br><span class="line">You have unmerged paths.</span><br><span class="line">  (fix conflicts and run &quot;git commit&quot;)</span><br><span class="line"></span><br><span class="line">Unmerged paths:</span><br><span class="line">  (use &quot;git add &lt;file&gt;...&quot; to mark resolution)</span><br><span class="line"></span><br><span class="line">    both modified:      index.html</span><br><span class="line"></span><br><span class="line">no changes added to commit (use &quot;git add&quot; and/or &quot;git commit -a&quot;)</span><br></pre></td></tr></table></figure>
+
+  任何因包含合并冲突而有待解决的文件，都会以未合并状态标识出来。 Git 会在有冲突的文件中加入标准的冲突解决标记，这样你可以打开这些包含冲突的文件然后手动解决冲突。 出现冲突的文件会包含一些特殊区段，看起来像下面这个样子：
+
+  <figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD:index.html</span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;footer&quot;</span>&gt;</span>contact : email.support@github.com<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">=======</span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;footer&quot;</span>&gt;</span></span><br><span class="line">please contact us at support@github.com</span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">&gt;&gt;&gt;&gt;&gt;&gt;&gt; iss53:index.html</span><br></pre></td></tr></table></figure>
+
+  这表示 `HEAD` 所指示的版本（也就是你的 `master` 分支所在的位置，因为你在运行 merge 命令的时候已经检出到了这个分支）在这个区段的上半部分（`=======` 的上半部分），而 `iss53` 分支所指示的版本在 `=======` 的下半部分。 为了解决冲突，你必须选择使用由 `=======` 分割的两部分中的一个，或者你也可以自行合并这些内容。 例如，你可以通过把这段内容换成下面的样子来解决冲突：
+
+  <figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;footer&quot;</span>&gt;</span></span><br><span class="line">please contact us at email.support@github.com</span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+  上述的冲突解决方案仅保留了其中一个分支的修改，并且 `&lt;&lt;&lt;&lt;&lt;&lt;&lt;` , `=======` , 和 `&gt;&gt;&gt;&gt;&gt;&gt;&gt;` 这些行被完全删除了。 在你解决了所有文件里的冲突之后，对每个文件使用 `git add` 命令来将其标记为冲突已解决。 一旦暂存这些原本有冲突的文件，Git 就会将它们标记为冲突已解决。
+</code></pre>
+</blockquote>
+<hr>
+<ol start="8">
+<li><p>变基</p>
+<p><code>git resbase &lt;branceName&gt;</code> </p>
+<p><strong>原理：</strong></p>
+<p>在这个例子中，你可以检出 <code>experiment</code> 分支，然后将它变基到 <code>master</code> 分支上：</p>
+<figure class="highlight console"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">git checkout experiment</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">git rebase master</span></span><br><span class="line">First, rewinding head to replay your work on top of it...</span><br><span class="line">Applying: added staged command</span><br></pre></td></tr></table></figure>
+
+<p>它的原理是首先找到这两个分支（即当前分支 <code>experiment</code>、变基操作的目标基底分支 <code>master</code>） 的最近共同祖先 <code>C2</code>，然后对比当前分支相对于该祖先的历次提交，提取相应的修改并存为临时文件， 然后将当前分支指向目标基底 <code>C3</code>, 最后以此将之前另存为临时文件的修改依序应用。 （译注：写明了 commit id，以便理解，下同）</p>
+<p><img src="/img/loading.jpg" data-lazy-src="/img_posts/basic-rebase-3.png" alt="将 `C4` 中的修改变基到 `C3` 上。"></p>
+</li>
+</ol>
+<hr>
+<ol start="9">
+<li>存储</li>
+</ol>
+<p>git stash命令的语法如下表所示。</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>git stath</td>
+<td>将当前工作空间的状态保存</td>
+</tr>
+<tr>
+<td>git stash list</td>
+<td>查看当前Git中存储的所有状态</td>
+</tr>
+<tr>
+<td>git stash apply {stashName}</td>
+<td>根据存储名称读取Git存储</td>
+</tr>
+<tr>
+<td>git stash drop {stashName}</td>
+<td>根据存储名称删除Git存储</td>
+</tr>
+<tr>
+<td>git stash save “日志信息”</td>
+<td>将当前工作空间的状态保存并指定一个日志信息</td>
+</tr>
+<tr>
+<td>git stash pop</td>
+<td>读取stash堆栈中的第一个存储，并将该存储从stash堆栈中移除</td>
+</tr>
+<tr>
+<td>git stash show [-p] {stashName}</td>
+<td>查看指定存储与未建立存储时的差异 -p：显示详细差异</td>
+</tr>
+<tr>
+<td>git stash branch {branchName} [stashName]</td>
+<td>创建并切换到一个新分支来读取指定的存储  stashName：存储的名称，默认情况下读取stash堆栈中栈顶的存储</td>
+</tr>
+</tbody></table>
+<h2 id="八、不常用命令"><a href="#八、不常用命令" class="headerlink" title="八、不常用命令"></a>八、不常用命令</h2><p><code>git rev-parse --abbrev-ref @{u}</code>  查看当前分支的上游分支</p>
+<h2 id="九、多人协同开发"><a href="#九、多人协同开发" class="headerlink" title="九、多人协同开发"></a>九、多人协同开发</h2><ol>
+<li>托管平台的仓库上的成员管理添加成员</li>
+<li><code>git clone </code> 仓库</li>
+<li>新建分支</li>
+<li>推送到远程仓库新的分支<code> git push &lt;仓库名&gt; 分支名：远程仓库分支名（远程没有会新建）</code></li>
+</ol>
+<h2 id="推送本地分支到远程指定分支"><a href="#推送本地分支到远程指定分支" class="headerlink" title="推送本地分支到远程指定分支"></a>推送本地分支到远程指定分支</h2><p>git checkout -b <bracname></p>
+<p>git push origin <bracname>&#x2F;&lt;&gt;</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a target="_blank" rel="noopener" href="https://github.com/ZxlDragonDoctor">猪教授</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://zxldragondoctor.github.io/2025/06/17/git/">https://zxldragondoctor.github.io/2025/06/17/git/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://ZxlDragonDoctor.github.io" target="_blank">花独柒</a>！</span></div></div><div class="tag_share"><div class="post-share"><div class="social-share" data-image="/img_posts/basic-rebase-3.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2025/06/10/Nginx-%E5%85%A5%E9%97%A8%E6%95%99%E7%A8%8B/" title="Nginx 入门教程"><img class="cover" src="/img/loading.jpg" data-lazy-src="https://cdn.nlark.com/yuque/0/2024/png/26411187/1725116572685-5d6963b3-0934-484a-9178-7d04d43ebbda.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">Nginx 入门教程</div></div><div class="info-2"><div class="info-item-1">1. 什么是 Nginx?Nginx 是一个高性能的 HTTP 服务器和反向代理服务器。它最初由 Igor Sysoev 开发，旨在解决 C10K 问题，即在单台服务器上处理 10,000 个并发连接的问题。如今，NGINX 还可以作为负载均衡器、邮件代理服务器和通用 TCP&#x2F;UDP 代理服务器。  2. Nginx 的基本概念 Web 服务器: Nginx 可用作静态内容（如 HTML 页面、图片和视频）的 Web 服务器。它处理客户端请求并返回相应的内容。 反向代理: 是指以代理服务器来接受 internet 上的连接请求，然后将请求转发给内部网络上的服务器，并将从服务器上得到的结果返回给 internet 上请求连接的客户端，此时代理服务器对外就表现为一个反向代理服务器。 负载均衡: Nginx 可以将流量分发到多个后端服务器，以提高系统的性能和可靠性。  3. 安装 Nginx3.1 在windows上安装 下载Nginx: 访问Nginx的官方网站：https://nginx.org/en/download.html 选择适合Windows的版本下载。通常是一...</div></div></div></a><a class="pagination-related" href="/2025/07/01/Spring%E5%9C%A8%E8%BF%9B%E8%A1%8C%E6%B3%A8%E5%85%A5%E7%9A%84%E6%97%B6%E5%80%99%E4%BC%9A%E5%85%88%E8%B0%83%E7%94%A8%E6%9E%84%E9%80%A0%E5%99%A8%E5%86%8D%E8%BF%9B%E8%A1%8C%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5/" title="Spring在进行注入的时候会先调用构造器再进行依赖注入"><img class="cover" src="/img/loading.jpg" data-lazy-src="/img/zxl_6.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">Spring在进行注入的时候会先调用构造器再进行依赖注入</div></div><div class="info-2"><div class="info-item-1">Spring在进行注入的时候会先调用构造器再进行依赖注入从代码和之前的异常信息来看，问题的根本原因在于 fileChatBasedMemory 在构造器中被使用时为 null。这是因为 Spring 在调用构造器时，尚未完成依赖注入。以下是具体的分析和解决方法： 问题分析 构造器中直接使用依赖：在 LoveApp 的构造器中，直接调用了 fileChatBasedMemory.setBaseDir(baseDir)。然而，此时 fileChatBasedMemory 还没有被 Spring 完全注入，因此为 null，导致了 NullPointerException。  依赖注入时机：!!!!!!!!!Spring 在创建 Bean 时，会先调用构造器，然后才进行依赖注入。因此，在构造器中直接使用依赖项是不安全的。   解决方法为了解决这个问题，可以将构造器中的逻辑移到一个初始化方法中，确保依赖注入完成后再执行相关逻辑。Spring 提供了 @PostConstruct 注解，用于定义初始化方法。 修改代码将 fileChatBasedMemory.setBaseDir(base...</div></div></div></a></nav><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="waline-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/loading.jpg" data-lazy-src="/img/total.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">猪教授</div><div class="author-info-description">纸上谈来终觉浅，绝知此事要躬行</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">69</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">1</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/ZxlDragonDoctor"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/ZxlDragonDoctor" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">欢迎来到花独柒的博客，记录生活，分享美好。</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#git%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95"><span class="toc-number">1.</span> <span class="toc-text">git学习记录</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80-%E4%BF%AE%E6%94%B9%E6%8F%90%E4%BA%A4%E4%BF%A1%E6%81%AF"><span class="toc-number">1.1.</span> <span class="toc-text">一.修改提交信息</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E4%BF%AE%E6%94%B9%E6%8F%90%E4%BA%A4%E4%BF%A1%E6%81%AF"><span class="toc-number">1.1.1.</span> <span class="toc-text">1. 修改提交信息</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E6%B7%BB%E5%8A%A0%E6%9B%B4%E5%A4%9A%E6%9B%B4%E6%94%B9%E5%88%B0%E4%B8%8A%E6%AC%A1%E6%8F%90%E4%BA%A4"><span class="toc-number">1.1.2.</span> <span class="toc-text">2. 添加更多更改到上次提交</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E6%8F%90%E4%BA%A4%E5%88%A0%E9%99%A4%E7%9A%84%E6%96%87%E4%BB%B6"><span class="toc-number">1.1.3.</span> <span class="toc-text">4.提交删除的文件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E4%BF%AE%E6%94%B9%E6%8C%87%E5%AE%9A%E6%96%87%E4%BB%B6%E7%9A%84%E6%8F%90%E4%BA%A4%E4%BF%A1%E6%81%AF%EF%BC%88%E5%B7%B2%E6%8E%A8%E9%80%81%EF%BC%89"><span class="toc-number">1.2.</span> <span class="toc-text">二、修改指定文件的提交信息（已推送）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B7%E4%BD%93%E5%9C%BA%E6%99%AF%E8%AF%B4%E6%98%8E"><span class="toc-number">1.2.1.</span> <span class="toc-text">具体场景说明</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%A6%E7%BB%86%E6%AD%A5%E9%AA%A4"><span class="toc-number">1.2.2.</span> <span class="toc-text">详细步骤</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E5%A4%87%E4%BB%BD%E5%BD%93%E5%89%8D%E4%BB%93%E5%BA%93"><span class="toc-number">1.2.2.1.</span> <span class="toc-text">1. 备份当前仓库</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E6%9F%A5%E6%89%BE%E4%B8%8E%E6%8C%87%E5%AE%9A%E6%96%87%E4%BB%B6%E5%A4%B9%E7%9B%B8%E5%85%B3%E7%9A%84%E6%8F%90%E4%BA%A4"><span class="toc-number">1.2.2.2.</span> <span class="toc-text">2. 查找与指定文件夹相关的提交</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-%E4%BA%A4%E4%BA%92%E5%BC%8F-rebase-%E5%AE%9A%E4%BD%8D%E6%8F%90%E4%BA%A4"><span class="toc-number">1.2.2.3.</span> <span class="toc-text">3. 交互式 rebase 定位提交</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-%E6%8B%86%E5%88%86%E4%B8%8E%E7%9B%AE%E6%A0%87%E6%96%87%E4%BB%B6%E5%A4%B9%E6%97%A0%E5%85%B3%E7%9A%84%E4%BF%AE%E6%94%B9"><span class="toc-number">1.2.2.4.</span> <span class="toc-text">4. 拆分与目标文件夹无关的修改</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-%E9%87%8D%E5%A4%8D%E6%93%8D%E4%BD%9C"><span class="toc-number">1.2.2.5.</span> <span class="toc-text">5. 重复操作</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#6-%E5%BC%BA%E5%88%B6%E6%8E%A8%E9%80%81%E6%9B%B4%E6%94%B9"><span class="toc-number">1.2.2.6.</span> <span class="toc-text">6. 强制推送更改</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A4%BA%E4%BE%8B%E6%93%8D%E4%BD%9C%E6%B5%81%E7%A8%8B"><span class="toc-number">1.2.3.</span> <span class="toc-text">示例操作流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9"><span class="toc-number">1.2.4.</span> <span class="toc-text">注意事项</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E8%A6%81%E8%BF%9E%E6%8E%A5%E5%88%B0%E5%85%B6%E4%BB%96-Git-%E4%BB%93%E5%BA%93%EF%BC%8C%E6%82%A8%E5%8F%AF%E4%BB%A5%E4%BD%BF%E7%94%A8%E4%BB%A5%E4%B8%8B%E6%AD%A5%E9%AA%A4%EF%BC%9A"><span class="toc-number">1.3.</span> <span class="toc-text">三、要连接到其他 Git 仓库，您可以使用以下步骤：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81git%E6%92%A4%E9%94%80%E8%AE%B0%E5%BD%95"><span class="toc-number">1.4.</span> <span class="toc-text">四、git撤销记录</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E5%B8%B8%E8%A7%81%E6%8A%A5%E9%94%99"><span class="toc-number">1.5.</span> <span class="toc-text">六、常见报错</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4"><span class="toc-number">1.6.</span> <span class="toc-text">七、常用命令</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E4%B8%8D%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4"><span class="toc-number">1.7.</span> <span class="toc-text">八、不常用命令</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E5%A4%9A%E4%BA%BA%E5%8D%8F%E5%90%8C%E5%BC%80%E5%8F%91"><span class="toc-number">1.8.</span> <span class="toc-text">九、多人协同开发</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8E%A8%E9%80%81%E6%9C%AC%E5%9C%B0%E5%88%86%E6%94%AF%E5%88%B0%E8%BF%9C%E7%A8%8B%E6%8C%87%E5%AE%9A%E5%88%86%E6%94%AF"><span class="toc-number">1.9.</span> <span class="toc-text">推送本地分支到远程指定分支</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/02/25/%E6%85%A7%E8%81%AA%E7%A7%91%E6%8A%80%E7%BD%91%E4%B8%8A%E9%9D%A2%E7%BB%8F%E6%80%BB%E7%BB%93/" title="慧聪科技网上面经总结"><img src="/img/loading.jpg" data-lazy-src="/img/zxl_4.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="慧聪科技网上面经总结"/></a><div class="content"><a class="title" href="/2026/02/25/%E6%85%A7%E8%81%AA%E7%A7%91%E6%8A%80%E7%BD%91%E4%B8%8A%E9%9D%A2%E7%BB%8F%E6%80%BB%E7%BB%93/" title="慧聪科技网上面经总结">慧聪科技网上面经总结</a><time datetime="2026-02-25T07:01:05.000Z" title="发表于 2026-02-25 15:01:05">2026-02-25</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/02/10/%E4%B8%AD%E7%A7%91%E5%85%A8%E5%AE%89%E7%AC%94%E8%AF%95%E9%A2%98/" title="中科全安笔试题"><img src="/img/loading.jpg" data-lazy-src="/img_posts/image-20260210140401034.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="中科全安笔试题"/></a><div class="content"><a class="title" href="/2026/02/10/%E4%B8%AD%E7%A7%91%E5%85%A8%E5%AE%89%E7%AC%94%E8%AF%95%E9%A2%98/" title="中科全安笔试题">中科全安笔试题</a><time datetime="2026-02-10T11:23:46.000Z" title="发表于 2026-02-10 19:23:46">2026-02-10</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/02/10/%E5%90%8C%E8%A1%8C%E8%80%85%E7%A7%91%E6%8A%80%E7%AC%94%E8%AF%95%E9%A2%98/" title="同行者科技笔试题"><img src="/img/loading.jpg" data-lazy-src="https://www.kimi.com/apiv2-files/sign-obj/kimi-fs%2Ffiles%2Fblob%2F4b6e82669ff764c996ae5d89cc64c6a18615f007da97f9ba9aff286a4b3437dc?filename=image.png&amp;sig=SXu_h3Xt6nBBghip3vy6bEbNkSFpc8-wNlDdlutqfjk=&amp;t=t" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="同行者科技笔试题"/></a><div class="content"><a class="title" href="/2026/02/10/%E5%90%8C%E8%A1%8C%E8%80%85%E7%A7%91%E6%8A%80%E7%AC%94%E8%AF%95%E9%A2%98/" title="同行者科技笔试题">同行者科技笔试题</a><time datetime="2026-02-09T23:43:18.000Z" title="发表于 2026-02-10 07:43:18">2026-02-10</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/10/10/%E5%8E%9F%E7%94%9F%E4%BA%8B%E4%BB%B6vue2%E4%B8%AD%E7%9A%84.native/" title="原生事件vue2中的.native"><img src="/img/loading.jpg" data-lazy-src="/img/zxl_3.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="原生事件vue2中的.native"/></a><div class="content"><a class="title" href="/2025/10/10/%E5%8E%9F%E7%94%9F%E4%BA%8B%E4%BB%B6vue2%E4%B8%AD%E7%9A%84.native/" title="原生事件vue2中的.native">原生事件vue2中的.native</a><time datetime="2025-10-10T07:54:28.000Z" title="发表于 2025-10-10 15:54:28">2025-10-10</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/10/10/%E5%9B%A0%E4%B8%BA-text-danger-%E9%87%8C%E5%8C%85%E5%90%AB-%E8%BF%9E%E5%AD%97%E7%AC%A6%EF%BC%88-%EF%BC%89%EF%BC%8C%E8%80%8C-%E8%BF%9E%E5%AD%97%E7%AC%A6%E5%9C%A8-JavaScript-%E5%AF%B9%E8%B1%A1%E9%94%AE%E5%90%8D%E9%87%8C%E6%98%AF%E4%B8%8D%E5%90%88%E6%B3%95%E6%A0%87%E8%AF%86%E7%AC%A6%EF%BC%9B/" title="因为 text-danger 里包含 连字符（-），而 连字符在 JavaScript 对象键名里是不合法标识符；"><img src="/img/loading.jpg" data-lazy-src="/img/zxl_6.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="因为 text-danger 里包含 连字符（-），而 连字符在 JavaScript 对象键名里是不合法标识符；"/></a><div class="content"><a class="title" href="/2025/10/10/%E5%9B%A0%E4%B8%BA-text-danger-%E9%87%8C%E5%8C%85%E5%90%AB-%E8%BF%9E%E5%AD%97%E7%AC%A6%EF%BC%88-%EF%BC%89%EF%BC%8C%E8%80%8C-%E8%BF%9E%E5%AD%97%E7%AC%A6%E5%9C%A8-JavaScript-%E5%AF%B9%E8%B1%A1%E9%94%AE%E5%90%8D%E9%87%8C%E6%98%AF%E4%B8%8D%E5%90%88%E6%B3%95%E6%A0%87%E8%AF%86%E7%AC%A6%EF%BC%9B/" title="因为 text-danger 里包含 连字符（-），而 连字符在 JavaScript 对象键名里是不合法标识符；">因为 text-danger 里包含 连字符（-），而 连字符在 JavaScript 对象键名里是不合法标识符；</a><time datetime="2025-10-10T06:10:22.000Z" title="发表于 2025-10-10 14:10:22">2025-10-10</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/wallhaven-gp8pdq.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2023 - 2026 By 猪教授</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.7.0</a></span></div><div class="footer_custom_text">纸上谈来终觉浅，绝知此事要躬行</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.7.0"></script><script src="/js/main.js?v=5.7.0"></script><script src="/js/tw_cn.js?v=5.7.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page@5.2.0/instantpage.min.js" type="module"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.iife.min.js"></script><script src="https://cdn.jsdelivr.net/npm/node-snackbar@0.1.16/dist/snackbar.min.js"></script><div class="js-pjax"><script>(() => {
+  const changeScriptToMath = article => {
+    article.querySelectorAll('script[type^="math/tex"]').forEach(el => {
+      const display = /mode=display/.test(el.type)
+      const node = document.createElement(display ? 'div' : 'span')
+      node.textContent = display
+        ? `$$${el.textContent}$$`
+        : `$${el.textContent}$`
+      el.parentNode.replaceChild(node, el)
+    })
+  }
+
+  const loadMathjax = () => {
+    const article = document.getElementById('article-container')
+    if (!article || article.querySelector('.hbe-container')) return
+    changeScriptToMath(article)
+
+    if (!window.MathJax) {
+      window.MathJax = {
+        loader: {
+          load: [
+            // Four font extension packages (optional)
+            //- '[tex]/bbm',
+            //- '[tex]/bboldx',
+            //- '[tex]/dsfont',
+            '[tex]/mhchem',
+            'ui/lazy'
+          ],
+          paths: {
+            'mathjax-newcm': '[mathjax]/../@mathjax/mathjax-newcm-font',
+
+            //- // Four font extension packages (optional)
+            //- 'mathjax-bbm-extension': '[mathjax]/../@mathjax/mathjax-bbm-font-extension',
+            //- 'mathjax-bboldx-extension': '[mathjax]/../@mathjax/mathjax-bboldx-font-extension',
+            //- 'mathjax-dsfont-extension': '[mathjax]/../@mathjax/mathjax-dsfont-font-extension',
+            'mathjax-mhchem-extension': '[mathjax]/../@mathjax/mathjax-mhchem-font-extension'
+          }
+        },
+        output: {
+          font: 'mathjax-newcm',
+        },
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          tags: 'ams',
+          packages: {
+            '[+]': [
+              'mhchem'
+            ]
+          }
+        },
+        chtml: {
+          scale: 1.1
+        },
+        options: {
+          lazyMargin: '200px',
+          enableMenu: true,
+          menuOptions: {
+            settings: {
+              enrich: false  // Turn off Braille and voice narration text automatic generation
+            }
+          },
+        }
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.min.js'
+      script.id = 'MathJax-script'
+      script.async = true
+      document.head.appendChild(script)
+    } else {
+      MathJax.typesetClear()
+      MathJax.typesetPromise([ article ])
+    }
+  }
+
+  btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+  window.pjax ? loadMathjax() : window.addEventListener('load', loadMathjax)
+})()</script><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.innerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+
+    setTimeout(() => URL.revokeObjectURL(url), 5000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    // Clean up previous event listeners and pending frames
+    if (wrap.__mermaidAbortController) {
+      wrap.__mermaidAbortController.abort()
+      if (wrap.__mermaidRafId) cancelAnimationFrame(wrap.__mermaidRafId)
+    }
+    const ac = new AbortController()
+    wrap.__mermaidAbortController = ac
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+    // Disable default gestures to prevent scroll chaining and pinch-zoom penetration in Chrome
+    svg.style.touchAction = 'none'
+
+    // Cache BoundingClientRect, throttled on scroll to reduce reflow
+    let cachedRect = svg.getBoundingClientRect()
+    let rectDirty = false
+    const markRectDirty = () => { rectDirty = true }
+    window.addEventListener('resize', markRectDirty, { signal: ac.signal })
+    window.addEventListener('scroll', markRectDirty, { signal: ac.signal, capture: true })
+    const getRect = () => {
+      if (rectDirty) {
+        cachedRect = svg.getBoundingClientRect()
+        rectDirty = false
+      }
+      return cachedRect
+    }
+
+    // Precompute clamp bounds from initial viewBox
+    const minW = initVb[2] * 0.1
+    const maxW = initVb[2] * 10
+    const minH = initVb[3] * 0.1
+    const maxH = initVb[3] * 10
+    const clampVb = vb => {
+      const out = vb.slice()
+      out[2] = clamp(out[2], minW, maxW)
+      out[3] = clamp(out[3], minH, maxH)
+      return out
+    }
+
+    // Throttle DOM updates using requestAnimationFrame
+    let pendingVb = null
+    let rafId = null
+    const applyVb = () => {
+      if (pendingVb) {
+        wrap.__mermaidCurViewBox = pendingVb
+        setSvgViewBox(svg, pendingVb)
+        pendingVb = null
+      }
+      rafId = null
+      wrap.__mermaidRafId = null
+    }
+    const setCurVb = vb => {
+      pendingVb = clampVb(vb)
+      if (!rafId) {
+        rafId = requestAnimationFrame(applyVb)
+        wrap.__mermaidRafId = rafId
+      }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      lastPointerX: 0,
+      lastPointerY: 0
+    }
+
+    const onPointerDown = e => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      const curVb = wrap.__mermaidCurViewBox
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+      if (state.pointers.size === 1) {
+        state.startVb = curVb.slice()
+        state.lastPointerX = e.clientX
+        state.lastPointerY = e.clientY
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = curVb.slice()
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+      const curVb = wrap.__mermaidCurViewBox
+      const rect = getRect()
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = state.pointers.values().next().value
+        const dxClient = p.x - state.lastPointerX
+        const dyClient = p.y - state.lastPointerY
+        state.lastPointerX = p.x
+        state.lastPointerY = p.y
+        const dx = dxClient * (curVb[2] / rect.width)
+        const dy = dyClient * (curVb[3] / rect.height)
+        setCurVb([curVb[0] - dx, curVb[1] - dy, curVb[2], curVb[3]])
+        return
+      }
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const px = curVb[0] + (cx - rect.left) * (curVb[2] / rect.width)
+        const py = curVb[1] + (cy - rect.top) * (curVb[3] / rect.height)
+        setCurVb(zoomAtPoint(state.startVb, factor, px, py))
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      // Release PointerCapture to avoid event capture anomalies
+      if (svg.hasPointerCapture && svg.hasPointerCapture(e.pointerId)) {
+        svg.releasePointerCapture(e.pointerId)
+      }
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+      } else if (state.pointers.size === 1) {
+        const p = state.pointers.values().next().value
+        state.lastPointerX = p.x
+        state.lastPointerY = p.y
+      }
+    }
+
+    const onWheel = e => {
+      // Prevent event bubbling from triggering external scroll
+      e.preventDefault()
+      e.stopPropagation()
+      // Normalize deltaY across deltaMode (Chrome uses pixels, Safari uses lines)
+      let delta = e.deltaY
+      if (e.deltaMode === 1) delta *= 16
+      else if (e.deltaMode === 2) delta *= 400
+
+      // Continuous zoom factor: smoother than fixed 1.1/0.9 steps
+      const zoomFactor = Math.pow(1.001, delta)
+
+      const curVb = wrap.__mermaidCurViewBox
+      const rect = getRect()
+      const px = curVb[0] + (e.clientX - rect.left) * (curVb[2] / rect.width)
+      const py = curVb[1] + (e.clientY - rect.top) * (curVb[3] / rect.height)
+      setCurVb(zoomAtPoint(curVb, zoomFactor, px, py))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (init) setCurVb(init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown, { signal: ac.signal })
+    svg.addEventListener('pointermove', onPointerMove, { signal: ac.signal })
+    svg.addEventListener('pointerup', onPointerUpOrCancel, { signal: ac.signal })
+    svg.addEventListener('pointercancel', onPointerUpOrCancel, { signal: ac.signal })
+    svg.addEventListener('wheel', onWheel, { passive: false, signal: ac.signal })
+    svg.addEventListener('dblclick', onDblClick, { signal: ac.signal })
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      // Clean up event listeners before removing old SVG
+      if (item.__mermaidAbortController) {
+        item.__mermaidAbortController.abort()
+      }
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      let config = {}
+      try {
+        config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      } catch (e) {
+        console.warn('[mermaid] failed to parse dataset.config:', e)
+      }
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+      const handleError = err => {
+        console.error(`[mermaid] render failed for block #${index}:`, err)
+        const errorEl = document.createElement('div')
+        errorEl.className = 'mermaid-error'
+        errorEl.textContent = `Mermaid render error: ${err.message || err}`
+        mermaidSrc.insertAdjacentElement('afterend', errorEl)
+      }
+
+      try {
+        const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+        // mermaid v9 and v10 compatibility
+        if (typeof renderFn === 'string') {
+          renderMermaid(renderFn)
+        } else {
+          renderFn.then(({ svg }) => renderMermaid(svg)).catch(handleError)
+        }
+      } catch (err) {
+        handleError(err)
+      }
+    })
+  }
+
+  const codeToMermaid = $article => {
+    const codeMermaidEle = $article.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    const $article = document.getElementById('article-container')
+    if (!$article) return
+
+    if (true) codeToMermaid($article)
+    const $mermaid = $article.querySelectorAll('.mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script><script>(() => {
+  const applyThemeDefaultsConfig = theme => {
+    if (theme === 'dark-mode') {
+      Chart.defaults.color = "rgba(255, 255, 255, 0.8)"
+      Chart.defaults.borderColor = "rgba(255, 255, 255, 0.2)"
+      Chart.defaults.scale.ticks.backdropColor = "transparent"
+    } else {
+      Chart.defaults.color = "rgba(0, 0, 0, 0.8)"
+      Chart.defaults.borderColor = "rgba(0, 0, 0, 0.1)"
+      Chart.defaults.scale.ticks.backdropColor = "transparent"
+    }
+  }
+
+  // Recursively traverse the config object and automatically apply theme-specific color schemes
+  const applyThemeConfig = (obj, theme) => {
+    if (typeof obj !== 'object' || obj === null) return
+
+    Object.keys(obj).forEach(key => {
+      const value = obj[key]
+      // If the property is an object and has theme-specific options, apply them
+      if (typeof value === 'object' && value !== null) {
+        if (value[theme]) {
+          obj[key] = value[theme] // Apply the value for the current theme
+        } else {
+          // Recursively process child objects
+          applyThemeConfig(value, theme)
+        }
+      }
+    })
+  }
+
+  const runChartJS = ele => {
+    window.loadChartJS = true
+
+    Array.from(ele).forEach((item, index) => {
+      const chartSrc = item.firstElementChild
+      const chartID = item.getAttribute('data-chartjs-id') || ('chartjs-' + index) // Use custom ID or default ID
+      const width = item.getAttribute('data-width')
+      const existingCanvas = document.getElementById(chartID)
+
+      // If a canvas already exists, remove it to avoid rendering duplicates
+      if (existingCanvas) {
+          existingCanvas.parentNode.remove()
+      }
+
+      const chartDefinition = chartSrc.textContent
+      const canvas = document.createElement('canvas')
+      canvas.id = chartID
+
+      const div = document.createElement('div')
+      div.className = 'chartjs-wrap'
+
+      if (width) {
+        div.style.width = width
+      }
+
+      div.appendChild(canvas)
+      chartSrc.insertAdjacentElement('afterend', div)
+
+      const ctx = document.getElementById(chartID).getContext('2d')
+
+      const config = JSON.parse(chartDefinition)
+
+      const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark-mode' : 'light-mode'
+
+      // Set default styles (initial setup)
+      applyThemeDefaultsConfig(theme)
+
+      // Automatically traverse the config and apply dual-mode color schemes
+      applyThemeConfig(config, theme)
+
+      new Chart(ctx, config)
+    })
+  }
+
+  const loadChartJS = () => {
+    const chartJSEle = document.querySelectorAll('#article-container .chartjs-container')
+    if (chartJSEle.length === 0) return
+
+    window.loadChartJS ? runChartJS(chartJSEle) : btf.getScript('https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js').then(() => runChartJS(chartJSEle))
+  }
+
+  // Listen for theme change events
+  btf.addGlobalFn('themeChange', loadChartJS, 'chartjs')
+  btf.addGlobalFn('encrypt', loadChartJS, 'chartjs')
+
+  window.pjax ? loadChartJS() : document.addEventListener('DOMContentLoaded', loadChartJS)
+})()</script><script>(() => {
+  const abcjsInit = () => {
+    const abcjsFn = () => {
+      const $article = document.getElementById("article-container")
+      if (!$article || $article.querySelector(".hbe-container")) return
+
+      setTimeout(() => {
+        const sheets = $article.querySelectorAll(".abc-music-sheet")
+        for (let i = 0; i < sheets.length; i++) {
+          const ele = sheets[i]
+          if (ele.children.length > 0) continue
+
+          // Parse parameters from data-params attribute
+          let params = {}
+          const dp = ele.getAttribute("data-params")
+          if (dp) {
+            try {
+              params = JSON.parse(dp)
+            } catch (e) {
+              console.error("Failed to parse data-params:", e)
+            }
+          }
+
+          // Merge parsed parameters with the responsive option
+          // Ensures params content appears before responsive
+          const options = { ...params, responsive: "resize" }
+
+          // Render the music score using ABCJS.renderAbc
+          ABCJS.renderAbc(ele, ele.textContent, options)
+        }
+      }, 100)
+    }
+
+    if (typeof ABCJS === "object" && ABCJS !== null) {
+      abcjsFn()
+    } else {
+      btf.getScript("https://cdn.jsdelivr.net/npm/abcjs@6.6.4/dist/abcjs-basic-min.min.js").then(abcjsFn)
+    }
+  }
+
+  if (window.pjax) {
+    abcjsInit()
+  } else {
+    window.addEventListener("load", abcjsInit)
+  }
+
+  btf.addGlobalFn("encrypt", abcjsInit, "abcjs")
+})()</script><script>(() => {
+  let initFn = window.walineFn || null
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = {"locale":{"placeholder":"欢迎留下你的评论哦~"}}
+
+  const destroyWaline = ele => ele.destroy()
+
+  const initWaline = (Fn, el = document, path = window.location.pathname) => {
+    const waline = Fn({
+      el: el.querySelector('#waline-wrap'),
+      serverURL: 'https://your-waline-server.example.com',
+      pageview: false,
+      dark: 'html[data-theme="dark"]',
+      comment: false,
+      ...option,
+      path: isShuoshuo ? path : (option && option.path) || path
+    })
+
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyWaline = () => {
+        destroyWaline(waline)
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+  }
+
+  const loadWaline = (el, path) => {
+    if (initFn) initWaline(initFn, el, path)
+    else {
+      btf.getCSS('https://cdn.jsdelivr.net/npm/@waline/client@3.15.2/dist/waline.min.css')
+        .then(() => import('https://cdn.jsdelivr.net/npm/@waline/client@3.15.2/dist/waline.min.js'))
+        .then(({ init }) => {
+          initFn = init || Waline.init
+          initWaline(initFn, el, path)
+          window.walineFn = initFn
+        })
+    }
+  }
+
+  if (isShuoshuo) {
+    'Waline' === 'Waline'
+      ? window.shuoshuoComment = { loadComment: loadWaline } 
+      : window.loadOtherComment = loadWaline
+    return
+  }
+
+  if ('Waline' === 'Waline' || !true) {
+    if (true) btf.loadComment(document.getElementById('waline-wrap'),loadWaline)
+    else setTimeout(loadWaline, 0)
+  } else {
+    window.loadOtherComment = loadWaline
+  }
+})()</script></div><script>window.newestComments = {
+  changeContent: content => {
+    if (content === '') return content
+
+    content = content.replace(/<img.*?src="(.*?)"?[^\>]+>/ig, '[图片]') // replace image link
+    content = content.replace(/<a[^>]+?href=["']?([^"']+)["']?[^>]*>([^<]+)<\/a>/gi, '[链接]') // replace url
+    content = content.replace(/<pre><code>.*?<\/pre>/gi, '[代码]') // replace code
+    content = content.replace(/<code>.*?<\/code>/gi, '[代码]') // replace code
+    content = content.replace(/<[^>]+>/g, "") // remove html tag
+
+    if (content.length > 150) {
+      content = content.substring(0, 150) + '...'
+    }
+    return content
+  },
+
+  generateHtml: (array, ele) => {
+    let result = ''
+
+    if (array.length) {
+      for (let i = 0; i < array.length; i++) {
+        result += '<div class="aside-list-item">'
+
+        if (true && array[i].avatar) {
+          const imgAttr = 'data-lazy-src'
+          const lazyloadNative = ''
+          result += `<a href="${array[i].url}" class="thumbnail"><img ${imgAttr}="${array[i].avatar}" alt="${array[i].nick}" ${lazyloadNative}></a>`
+        }
+
+        result += `<div class="content">
+        <a class="comment" href="${array[i].url}" title="${array[i].content}">${array[i].content}</a>
+        <div class="name"><span>${array[i].nick} / </span><time datetime="${array[i].date}">${btf.diffDate(array[i].date, true)}</time></div>
+        </div></div>`
+      }
+    } else {
+      result += '暂无评论'
+    }
+
+    ele.innerHTML = result
+    window.lazyLoadInstance && window.lazyLoadInstance.update()
+    window.pjax && window.pjax.refresh(ele)
+  },
+
+  newestCommentInit: (name, getComment) => {
+    const $dom = document.querySelector('#card-newest-comments .aside-list')
+    if ($dom) {
+      const data = btf.saveToLocal.get(name)
+      if (data) {
+        newestComments.generateHtml(JSON.parse(data), $dom)
+      } else {
+        getComment($dom)
+      }
+    }
+  },
+
+  run: (name, getComment) => {
+    newestComments.newestCommentInit(name, getComment)
+    btf.addGlobalFn('pjaxComplete', () => newestComments.newestCommentInit(name, getComment), name)
+  }
+}</script><script>window.addEventListener('load', () => {
+  const keyName = 'waline-newest-comments'
+  const { changeContent, generateHtml, run } = window.newestComments
+
+  const getComment = async (ele) => {
+    try {
+      const res = await fetch('https://your-waline-server.example.com/api/comment?type=recent&count=6')
+      const result = await res.json()
+      const walineArray = result.data.map(e => {
+        return {
+          'content': changeContent(e.comment),
+          'avatar': e.avatar,
+          'nick': e.nick,
+          'url': e.url + '#' + e.objectId,
+          'date': e.time || e.insertedAt
+        }
+      })
+      btf.saveToLocal.set(keyName, JSON.stringify(walineArray), 10/(60*24))
+      generateHtml(walineArray, ele)
+    } catch (err) {
+      console.error(err)
+      ele.textContent= "无法获取评论，请确认相关配置是否正确"
+    }
+  }
+
+  run(keyName, getComment)
+})</script><canvas class="fireworks" mobile="false"></canvas><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/fireworks.min.js"></script><script defer="defer" id="ribbon" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/canvas-ribbon.min.js" size="150" alpha="0.6" zIndex="-1" mobile="false" data-click="false"></script><script defer="defer" id="fluttering_ribbon" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/canvas-fluttering-ribbon.min.js"></script><script id="canvas_nest" defer="defer" color="135,180,240" opacity="0.7" zIndex="-1" count="99" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/canvas-nest.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = false;
+document.body.addEventListener('input', POWERMODE);
+</script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/click-heart.min.js" async="async" mobile="false"></script><script id="click-show-text" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/click-show-text.min.js" data-mobile="false" data-text="努力,加油,奋斗" data-fontsize="15px" data-random="false" async="async"></script><script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.min.js" defer="defer"></script><script>document.addEventListener('DOMContentLoaded', () => {
+  const pjaxSelectors = ["head > title","#config-diff","#body-wrap","#rightside-config-hide","#rightside-config-show",".js-pjax"]
+
+  window.pjax = new Pjax({
+    elements: 'a:not([target="_blank"]):not([data-fancybox])',
+    selectors: pjaxSelectors,
+    cacheBust: false,
+    analytics: false,
+    scrollRestoration: false
+  })
+
+  const triggerPjaxFn = (val) => {
+    if (!val) return
+    Object.values(val).forEach(fn => {
+      try {
+        fn()
+      } catch (err) {
+        console.debug('Pjax callback failed:', err)
+      }
+    })
+  }
+
+  document.addEventListener('pjax:send', () => {
+    // removeEventListener
+    btf.removeGlobalFnEvent('pjaxSendOnce')
+    btf.removeGlobalFnEvent('themeChange')
+
+    // reset readmode
+    const $bodyClassList = document.body.classList
+    if ($bodyClassList.contains('read-mode')) $bodyClassList.remove('read-mode')
+
+    triggerPjaxFn(window.globalFn.pjaxSend)
+  })
+
+  document.addEventListener('pjax:complete', () => {
+    btf.removeGlobalFnEvent('pjaxCompleteOnce')
+    document.querySelectorAll('script[data-pjax]').forEach(item => {
+      if (!item.parentNode) return
+      const newScript = document.createElement('script')
+      const content = item.text || item.textContent || ''
+      Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+      newScript.appendChild(document.createTextNode(content))
+      item.parentNode.replaceChild(newScript, item)
+    })
+
+    triggerPjaxFn(window.globalFn.pjaxComplete)
+  })
+
+  document.addEventListener('pjax:error', e => {
+    const responseURL = e.request && e.request.responseURL
+    if (e.request && e.request.status === 404) {
+      true
+        ? pjax.loadUrl('/404')
+        : responseURL && (window.location.href = responseURL)
+    } else if (responseURL) {
+      window.location.href = responseURL
+    }
+  })
+})</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="搜索文章关键词..." type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.7.0"></script></div></div></body></html>
