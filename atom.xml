@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>花独柒</title>
+  
+  <subtitle>纸上谈来终觉浅，绝知此事要躬行</subtitle>
+  <link href="https://zxldragondoctor.github.io/atom.xml" rel="self"/>
+  
+  <link href="https://zxldragondoctor.github.io/"/>
+  <updated>2026-08-06T15:57:59.382Z</updated>
+  <id>https://zxldragondoctor.github.io/</id>
+  
+  <author>
+    <name>猪教授</name>
+    
+  </author>
+  
+  <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Zxl_first-blog</title>
+    <link href="https://zxldragondoctor.github.io/2023/12/28/Zxl-first-blog/"/>
+    <id>https://zxldragondoctor.github.io/2023/12/28/Zxl-first-blog/</id>
+    <published>2023-12-28T08:34:04.000Z</published>
+    <updated>2026-08-06T15:57:59.382Z</updated>
+    
+    <content type="html"><![CDATA[<p>大家好，我是猪教授~~</p><p>这是我发布的第一篇博客！</p><p>欢迎观看。</p>]]></content>
+    
+    
+    <summary type="html">大家好，我是猪教授~~ 这是我发布的第一篇博客！</summary>
+    
+    
+    
+    <category term="随笔" scheme="https://zxldragondoctor.github.io/categories/%E9%9A%8F%E7%AC%94/"/>
+    
+    
+    <category term="生活" scheme="https://zxldragondoctor.github.io/tags/%E7%94%9F%E6%B4%BB/"/>
+    
+  </entry>
+  
+</feed>
