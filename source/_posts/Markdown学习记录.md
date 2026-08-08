@@ -5,7 +5,6 @@ updated: 2024-12-21 00:38:28
 categories:
   - 笔记
 
-cover: D:\program\Typora\md上传图片\image-20241013232500775.png
 ---
 
 # markdown简易学习记录

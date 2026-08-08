@@ -5,7 +5,6 @@ updated: 2025-06-10 11:12:55
 categories:
   - 笔记
 
-cover: https://cdn.nlark.com/yuque/0/2024/png/26411187/1725116572685-5d6963b3-0934-484a-9178-7d04d43ebbda.png
 ---
 
 ## 1. 什么是 Nginx?
