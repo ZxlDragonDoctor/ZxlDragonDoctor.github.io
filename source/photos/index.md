@@ -14,6 +14,6 @@ top_img: /img/wallhaven-1pq9kv.png
 {% galleryGroup 杭州-灵隐寺 杭州-灵隐寺照片集 /photos/杭州-灵隐寺/ /img/photos/杭州-灵隐寺/IMG_20260704_161326.jpg %}
 {% galleryGroup 杭州-西湖 杭州-西湖照片集 /photos/杭州-西湖/ /img/photos/杭州-西湖/IMG_20260625_111326.jpg %}
 {% galleryGroup 江苏泰州 江苏泰州照片集 /photos/江苏泰州/ /img/photos/江苏泰州/IMG_20251111_084925.jpg %}
-{% galleryGroup 沙湖 沙湖照片集 /photos/沙湖/ /img/photos/沙湖/Image_1779937730280_819.jpg %}
+{% galleryGroup 乌海 乌海照片集 /photos/乌海/ /img/photos/乌海/Image_1779937730280_819.jpg %}
 {% galleryGroup 老家本土生活 老家本土生活照片集 /photos/老家本土生活/ /img/photos/老家本土生活/1689036207058.jpeg %}
 {% galleryGroup 重庆之光 重庆之光照片集 /photos/重庆之光/ /img/photos/重庆之光/Image_1721558827246.jpg %}
