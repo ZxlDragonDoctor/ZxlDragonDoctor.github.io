@@ -2,6 +2,24 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://zxldragondoctor.github.io/about/</loc>
+    
+    <lastmod>2026-08-13</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://zxldragondoctor.github.io/shuoshuo/</loc>
+    
+    <lastmod>2026-08-13</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://zxldragondoctor.github.io/photos/</loc>
     
     <lastmod>2026-08-13</lastmod>
@@ -128,15 +146,6 @@
   </url>
   
   <url>
-    <loc>https://zxldragondoctor.github.io/shuoshuo/</loc>
-    
-    <lastmod>2026-08-06</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://zxldragondoctor.github.io/link/</loc>
     
     <lastmod>2026-08-06</lastmod>
@@ -147,15 +156,6 @@
   
   <url>
     <loc>https://zxldragondoctor.github.io/comment/</loc>
-    
-    <lastmod>2026-08-06</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://zxldragondoctor.github.io/about/</loc>
     
     <lastmod>2026-08-06</lastmod>
     
