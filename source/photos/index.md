@@ -2,7 +2,7 @@
 title: 相册
 date: 2024-01-08 23:23:00
 comments: false
-top_img: /img/wallhaven-1pq9kv.png
+top_img: /img/wallhaven-jey28y.jpg
 ---
 
 > 生活中的美好瞬间。点击相册卡片查看对应分类的照片，点击单张图片可放大浏览。
