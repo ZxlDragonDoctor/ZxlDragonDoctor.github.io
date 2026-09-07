@@ -752,7 +752,7 @@
 
   const getComment = async (ele) => {
     try {
-      const res = await fetch('https://your-waline-server.example.com/api/comment?type=recent&count=6')
+      const res = await fetch('https://waline-qzmr.vercel.app/api/comment?type=recent&count=6')
       const result = await res.json()
       const walineArray = result.data.map(e => {
         return {
