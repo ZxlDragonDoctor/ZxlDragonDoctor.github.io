@@ -4,6 +4,7 @@ date: 2025-01-01 16:32:57
 updated: 2025-01-01 16:32:57
 categories:
   - 笔记
+comments: true
 ---
 
 # Linux命令

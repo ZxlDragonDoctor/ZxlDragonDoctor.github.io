@@ -4,6 +4,7 @@ date: 2025-07-09 00:21:39
 updated: 2025-07-09 00:21:39
 categories:
   - 笔记
+comments: true
 ---
 
 # 布隆过滤器（**Bloom Filter**）

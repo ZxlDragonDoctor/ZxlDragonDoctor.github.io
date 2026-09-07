@@ -6,6 +6,7 @@ categories:
   - Java面试
 
 cover: /img_posts/image-20250403092810593.png
+comments: true
 ---
 
 # python初识

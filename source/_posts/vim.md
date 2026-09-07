@@ -4,6 +4,7 @@ date: 2025-01-01 14:36:06
 updated: 2025-01-01 14:36:06
 categories:
   - 笔记
+comments: true
 ---
 
 # VIM命令

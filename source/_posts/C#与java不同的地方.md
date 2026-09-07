@@ -6,6 +6,7 @@ categories:
   - 学习总结
 
 cover: https://i-blog.csdnimg.cn/direct/fc1b3ed43878463f989f94d61eccfc3f.png
+comments: true
 ---
 
 # C#与java不同的地方

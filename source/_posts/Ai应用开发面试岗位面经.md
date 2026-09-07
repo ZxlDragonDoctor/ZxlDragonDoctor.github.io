@@ -6,6 +6,7 @@ categories:
   - 笔记
 
 cover: /img_posts/image-20250708185518219.png
+comments: true
 ---
 
 # Ai应用开发面试岗位面经

@@ -6,6 +6,7 @@ categories:
   - 笔记
 
 cover: /img_posts/image-20241225222506160.png
+comments: true
 ---
 
 # redis

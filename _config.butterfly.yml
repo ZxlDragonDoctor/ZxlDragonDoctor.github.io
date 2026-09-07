@@ -419,7 +419,7 @@ valine:
   option:
 
 waline:
-  serverURL: https://your-waline-server.example.com
+  serverURL: https://waline-qzmr.vercel.app/
   bg:
   pageview: false
   option:

@@ -5,6 +5,7 @@ updated: 2025-06-10 11:12:55
 categories:
   - 笔记
 
+comments: true
 ---
 
 ## 1. 什么是 Nginx?

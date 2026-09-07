@@ -6,6 +6,7 @@ categories:
   - 笔记
 
 cover: /img_posts/image-20241018213900272.png
+comments: true
 ---
 
 # Maven 学习记录

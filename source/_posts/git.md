@@ -6,6 +6,7 @@ categories:
   - 笔记
 
 cover: /img_posts/basic-rebase-3.png
+comments: true
 ---
 
 #  git学习记录

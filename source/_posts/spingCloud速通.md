@@ -6,6 +6,7 @@ categories:
   - 笔记
 
 cover: /img_posts/image-20250313002602436.png
+comments: true
 ---
 
 # spingCloud速通

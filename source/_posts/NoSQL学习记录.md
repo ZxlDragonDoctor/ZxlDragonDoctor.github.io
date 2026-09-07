@@ -4,6 +4,7 @@ date: 2024-10-29 12:13:00
 updated: 2024-10-29 12:13:00
 categories:
   - 笔记
+comments: true
 ---
 
 # NoSQL学习记录

@@ -4,6 +4,7 @@ date: 2025-03-08 11:41:14
 updated: 2025-03-08 11:41:14
 categories:
   - Java面试
+comments: true
 ---
 
 # mybatis缓存机制

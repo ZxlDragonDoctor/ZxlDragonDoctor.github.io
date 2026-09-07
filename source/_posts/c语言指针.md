@@ -4,6 +4,7 @@ date: 2025-09-30 16:31:20
 updated: 2025-09-30 16:31:20
 categories:
   - 学习总结
+comments: true
 ---
 
 ## c语言指针

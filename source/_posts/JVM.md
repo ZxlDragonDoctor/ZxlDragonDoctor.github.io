@@ -6,6 +6,7 @@ categories:
   - Java面试
 
 cover: /img_posts/image-20250423200310534.png
+comments: true
 ---
 
 # JVM

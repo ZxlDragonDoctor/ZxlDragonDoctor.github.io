@@ -4,6 +4,7 @@ date: 2025-10-10 14:10:22
 updated: 2025-10-10 14:10:22
 categories:
   - 学习总结
+comments: true
 ---
 
 因为 `text-danger` 里包含 **连字符（-）**，而 **连字符在 JavaScript 对象键名里是不合法标识符**；  

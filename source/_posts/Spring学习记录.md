@@ -6,6 +6,7 @@ categories:
   - 笔记
 
 cover: /img_posts/image-20241114223033795.png
+comments: true
 ---
 
 # Spring学习记录

@@ -4,6 +4,7 @@ date: 2025-04-03 01:46:52
 updated: 2025-04-03 01:46:52
 categories:
   - Java面试
+comments: true
 ---
 
 #**各种lambda表达式的应用场景**

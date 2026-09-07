@@ -4,6 +4,7 @@ date: 2025-07-01 22:33:29
 updated: 2025-07-01 22:33:29
 categories:
   - 笔记
+comments: true
 ---
 
 # Spring在进行注入的时候会先调用构造器再进行依赖注入

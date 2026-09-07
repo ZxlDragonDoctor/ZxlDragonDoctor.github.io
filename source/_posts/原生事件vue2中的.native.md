@@ -4,6 +4,7 @@ date: 2025-10-10 15:54:28
 updated: 2025-10-10 15:54:28
 categories:
   - 学习总结
+comments: true
 ---
 
 ## 原生事件vue2中的.native

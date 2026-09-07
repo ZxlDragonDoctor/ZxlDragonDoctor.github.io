@@ -4,6 +4,7 @@ date: 2025-03-18 17:15:42
 updated: 2025-03-18 17:15:42
 categories:
   - Java面试
+comments: true
 ---
 
 # String lock = String.valueOf(userId).intern();

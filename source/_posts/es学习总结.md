@@ -4,6 +4,7 @@ date: 2025-08-29 13:54:57
 updated: 2025-08-29 13:54:57
 categories:
   - 学习总结
+comments: true
 ---
 
 # elasticsearch

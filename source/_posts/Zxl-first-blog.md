@@ -8,6 +8,7 @@ categories:
 cover: /img/zxl_1.jpg
 top_img:
 description: 大家好，我是猪教授~~ 这是我发布的第一篇博客！
+comments: true
 ---
 
 大家好，我是猪教授~~

@@ -4,6 +4,7 @@ date: 2025-09-28 20:00:21
 updated: 2025-09-28 20:00:21
 categories:
   - 学习总结
+comments: true
 ---
 
 ## java中的四种函数式接口

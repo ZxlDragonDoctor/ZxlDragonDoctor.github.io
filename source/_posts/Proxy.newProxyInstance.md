@@ -4,6 +4,7 @@ date: 2025-09-16 16:53:16
 updated: 2025-09-16 16:53:16
 categories:
   - 学习总结
+comments: true
 ---
 
 ## Proxy.newProxyInstance

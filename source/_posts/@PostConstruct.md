@@ -4,6 +4,7 @@ date: 2025-04-24 16:59:18
 updated: 2025-04-24 16:59:18
 categories:
   - Java面试
+comments: true
 ---
 
 # @PostConstruct

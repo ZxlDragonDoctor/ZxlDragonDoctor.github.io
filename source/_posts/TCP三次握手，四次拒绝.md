@@ -6,6 +6,7 @@ categories:
   - Java面试
 
 cover: /img_posts/image-20250808013842100.png
+comments: true
 ---
 
 ## TCP三次握手，四次拒绝
