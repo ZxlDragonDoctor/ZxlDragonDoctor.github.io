@@ -2,6 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://zxldragondoctor.github.io/comment/</loc>
+    
+    <lastmod>2026-09-07</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://zxldragondoctor.github.io/2023/12/28/Zxl-first-blog/</loc>
     
     <lastmod>2026-09-07</lastmod>
@@ -156,15 +165,6 @@
   
   <url>
     <loc>https://zxldragondoctor.github.io/link/</loc>
-    
-    <lastmod>2026-08-06</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://zxldragondoctor.github.io/comment/</loc>
     
     <lastmod>2026-08-06</lastmod>
     
