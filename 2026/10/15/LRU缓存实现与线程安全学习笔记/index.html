@@ -1,0 +1,1149 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>LRU缓存实现与线程安全学习笔记 | 花独柒</title><meta name="author" content="猪教授"><meta name="copyright" content="猪教授"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="LRU 缓存：LinkedHashMap、双向链表与线程安全本文从 LeetCode 146「LRU 缓存」出发，整理两种常见实现方式，并说明如何为手写缓存增加线程安全，以及为什么仅把 HashMap 换成 ConcurrentHashMap 并不能解决整个缓存的并发问题。 对应题目146. LRU 缓存（LRU Cache） 一、什么是 LRU？LRU 是 Least Recently Used">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LRU缓存实现与线程安全学习笔记">
+<meta property="og:url" content="https://zxldragondoctor.github.io/2026/10/15/LRU%E7%BC%93%E5%AD%98%E5%AE%9E%E7%8E%B0%E4%B8%8E%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
+<meta property="og:site_name" content="花独柒">
+<meta property="og:description" content="LRU 缓存：LinkedHashMap、双向链表与线程安全本文从 LeetCode 146「LRU 缓存」出发，整理两种常见实现方式，并说明如何为手写缓存增加线程安全，以及为什么仅把 HashMap 换成 ConcurrentHashMap 并不能解决整个缓存的并发问题。 对应题目146. LRU 缓存（LRU Cache） 一、什么是 LRU？LRU 是 Least Recently Used">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://zxldragondoctor.github.io/img/zxl_2.jpg">
+<meta property="article:published_time" content="2026-10-15T10:30:00.000Z">
+<meta property="article:modified_time" content="2026-10-18T15:57:09.662Z">
+<meta property="article:author" content="猪教授">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="LRU">
+<meta property="article:tag" content="学习笔记">
+<meta property="article:tag" content="并发">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://zxldragondoctor.github.io/img/total.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "LRU缓存实现与线程安全学习笔记",
+  "url": "https://zxldragondoctor.github.io/2026/10/15/LRU%E7%BC%93%E5%AD%98%E5%AE%9E%E7%8E%B0%E4%B8%8E%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/",
+  "image": "https://zxldragondoctor.github.io/img/zxl_2.jpg",
+  "datePublished": "2026-10-15T10:30:00.000Z",
+  "dateModified": "2026-10-18T15:57:09.662Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "猪教授",
+      "url": "https://github.com/ZxlDragonDoctor"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/netoal.png"><link rel="canonical" href="https://zxldragondoctor.github.io/2026/10/15/LRU%E7%BC%93%E5%AD%98%E5%AE%9E%E7%8E%B0%E4%B8%8E%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="manifest" href="/manifest.json"/><link rel="apple-touch-icon" sizes="180x180" href="/img/netoal.png"/><link rel="icon" type="image/png" sizes="32x32" href="/img/netoal.png"/><link rel="icon" type="image/png" sizes="16x16" href="/img/netoal.png"/><link rel="mask-icon" href="/img/netoal.png" color="#5bbad5"/><link rel="stylesheet" href="/css/index.css?v=5.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.3.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/node-snackbar@0.1.16/dist/snackbar.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        const data = { value }
+
+        if (ttl != null) {
+          data.expiry = Date.now() + ttl * 86400000
+        }
+
+        localStorage.setItem(key, JSON.stringify(data))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return
+
+        try {
+          const data = JSON.parse(itemStr)
+
+          if (data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(key)
+            return
+          }
+
+          return data.value
+        } catch {
+          localStorage.removeItem(key)
+        }
+      }
+    }
+
+    const scriptCache = new Map()
+    const cssCache = new Map()
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => {
+        if (scriptCache.has(url)) {
+          return scriptCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+
+          script.src = url
+          script.async = true
+
+          for (const key in attr) {
+            script.setAttribute(key, attr[key])
+          }
+
+          script.onload = resolve
+          script.onerror = reject
+
+          document.head.appendChild(script)
+        })
+
+        scriptCache.set(url, promise)
+
+        return promise
+      },
+      getCSS: (url, id) => {
+        if (cssCache.has(url)) {
+          return cssCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const link = document.createElement('link')
+
+          link.rel = 'stylesheet'
+          link.href = url
+
+          if (id) {
+            link.id = id
+          }
+
+          link.onload = resolve
+          link.onerror = reject
+
+          document.head.appendChild(link)
+        })
+
+        cssCache.set(url, promise)
+
+        return promise
+      },
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!true && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+      const activateDarkMode = () => {
+        document.documentElement.dataset.theme = 'dark'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.dataset.theme = 'light'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          const mediaQueryDark = window.matchMedia('(prefers-color-scheme: dark)')
+          const mediaQueryLight = window.matchMedia('(prefers-color-scheme: light)')
+
+          if (theme === undefined) {
+            if (mediaQueryLight.matches) activateLightMode()
+            else if (mediaQueryDark.matches) activateDarkMode()
+            else {
+              const hour = new Date().getHours()
+              const start = 6
+              const end = 18
+              const isNight =
+                start < end
+                    ? hour < start || hour >= end
+                    : hour >= start || hour < end
+              isNight ? activateDarkMode() : activateLightMode()
+            }
+            mediaQueryDark.addEventListener('change', e => {
+              if (saveToLocal.get('theme') === undefined) {
+                e.matches ? activateDarkMode() : activateLightMode()
+              }
+            })
+          } else {
+            theme === 'light' ? activateLightMode() : activateDarkMode()
+          }
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":true,"top_n_per_article":1,"unescape":false,"pagination":{"enable":true,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":true,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: {"limitCount":150,"languages":{"author":"作者: 猪教授","link":"链接: ","source":"来源: 花独柒","info":"著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。"}},
+  lightbox: 'fancybox',
+  Snackbar: {"chs_to_cht":"已切换为繁体中文","cht_to_chs":"已切换为简体中文","day_to_night":"已切换为深色模式","night_to_day":"已切换为浅色模式","bgLight":"#49b1f5","bgDark":"#1f1f1f","position":"bottom-left"},
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: true,
+  islazyloadPlugin: true,
+  isAnchor: true,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: true
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'LRU缓存实现与线程安全学习笔记',
+  isHighlightShrink: true,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.2"><link rel="alternate" href="/atom.xml" title="花独柒" type="application/atom+xml">
+</head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><script>(()=>{
+  const $loadingBox = document.getElementById('loading-box')
+  const $body = document.body
+  const preloader = {
+    endLoading: () => {
+      if ($loadingBox.classList.contains('loaded')) return
+      $body.style.overflow = ''
+      $loadingBox.classList.add('loaded')
+    },
+    initLoading: () => {
+      $body.style.overflow = 'hidden'
+      $loadingBox.classList.remove('loaded')
+    }
+  }
+
+  preloader.initLoading()
+
+  if (document.readyState === 'complete') {
+    preloader.endLoading()
+  } else {
+    window.addEventListener('load', preloader.endLoading)
+    document.addEventListener('DOMContentLoaded', preloader.endLoading)
+    // Add timeout protection: force end after 7 seconds
+    setTimeout(preloader.endLoading, 7000)
+  }
+
+  if (true) {
+    btf.addGlobalFn('pjaxSend', preloader.initLoading, 'preloader_init')
+    btf.addGlobalFn('pjaxComplete', preloader.endLoading, 'preloader_end')
+  }
+})()</script><div class="bg-animation" id="web_bg" style="background-image: url(/img/wallhaven-1pq9kv.png);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/loading.jpg" data-lazy-src="/img/total.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">80</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">24</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">6</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 博文</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fa fa-archive"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fa fa-folder-open"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 生活</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/shuoshuo/"><i class="fa-fw fa fa-comments-o"></i><span> 分享</span></a></li><li><a class="site-page child" href="/photos/"><i class="fa-fw fa fa-camera-retro"></i><span> 相册</span></a></li><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 影视</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fa fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/comment/"><i class="fa-fw fa fa-paper-plane"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于笔者</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background-image: url(/img/zxl_2.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/loading.jpg" data-lazy-src="/img/netoal.png" alt="Logo"><span class="site-name">花独柒</span></a><a class="nav-page-title" href="/"><span class="site-name">LRU缓存实现与线程安全学习笔记</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 博文</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fa fa-archive"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fa fa-folder-open"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 生活</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/shuoshuo/"><i class="fa-fw fa fa-comments-o"></i><span> 分享</span></a></li><li><a class="site-page child" href="/photos/"><i class="fa-fw fa fa-camera-retro"></i><span> 相册</span></a></li><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 影视</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fa fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/comment/"><i class="fa-fw fa fa-paper-plane"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于笔者</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">LRU缓存实现与线程安全学习笔记<a class="post-edit-link" href="https://github.com/ZxlDragonDoctor/ZxlDragonDoctor.github.io/edit/main/source/_posts/LRU缓存实现与线程安全学习笔记.md" title="编辑" target="_blank"><i class="fas fa-pencil-alt"></i></a></h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-10-15T10:30:00.000Z" title="发表于 2026-10-15 18:30:00">2026-10-15</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-10-18T15:57:09.662Z" title="更新于 2026-10-18 23:57:09">2026-10-18</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0/">算法学习</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">1.9k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>7分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><div id="post-outdate-notice" data="{&quot;limitDay&quot;:365,&quot;messagePrev&quot;:&quot;本文最后更新于&quot;,&quot;messageNext&quot;:&quot;天前，内容可能已过时，请知悉。&quot;,&quot;postUpdate&quot;:&quot;2026-10-18 23:57:09&quot;}" hidden></div><h1 id="LRU-缓存：LinkedHashMap、双向链表与线程安全"><a href="#LRU-缓存：LinkedHashMap、双向链表与线程安全" class="headerlink" title="LRU 缓存：LinkedHashMap、双向链表与线程安全"></a>LRU 缓存：LinkedHashMap、双向链表与线程安全</h1><p>本文从 LeetCode 146「LRU 缓存」出发，整理两种常见实现方式，并说明如何为手写缓存增加线程安全，以及为什么仅把 <code>HashMap</code> 换成 <code>ConcurrentHashMap</code> 并不能解决整个缓存的并发问题。</p>
+<h2 id="对应题目"><a href="#对应题目" class="headerlink" title="对应题目"></a>对应题目</h2><p><a target="_blank" rel="noopener" href="https://leetcode.cn/problems/lru-cache/">146. LRU 缓存（LRU Cache）</a></p>
+<h2 id="一、什么是-LRU？"><a href="#一、什么是-LRU？" class="headerlink" title="一、什么是 LRU？"></a>一、什么是 LRU？</h2><p>LRU 是 Least Recently Used 的缩写，意思是<strong>最近最少使用</strong>。缓存容量满时，删除最近最久没有被访问的条目。</p>
+<p>缓存一般需要支持：</p>
+<ul>
+<li><code>get(key)</code>：存在时返回值，并刷新该条目的最近使用状态；不存在时返回 <code>-1</code>。</li>
+<li><code>put(key, value)</code>：添加或更新条目；容量超限时淘汰最久未使用的条目。</li>
+</ul>
+<p>题目要求 <code>get</code> 和 <code>put</code> 达到 <code>O(1)</code> 平均时间复杂度。</p>
+<hr>
+<h2 id="二、手写实现：HashMap-双向链表"><a href="#二、手写实现：HashMap-双向链表" class="headerlink" title="二、手写实现：HashMap + 双向链表"></a>二、手写实现：HashMap + 双向链表</h2><p>单独使用哈希表可以在平均 <code>O(1)</code> 时间内找到节点，但它不记录访问顺序。双向链表可以在 <code>O(1)</code> 时间内移动或删除已知节点，因此把两者结合：</p>
+<ul>
+<li><code>HashMap&lt;key, node&gt;</code>：通过键快速定位链表节点。</li>
+<li>双向链表：记录最近使用顺序。</li>
+</ul>
+<p>本文约定：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">head.next                                  tail.prev</span><br><span class="line">最近使用（MRU）  ←  ...链表节点...  →  最久未使用（LRU）</span><br></pre></td></tr></table></figure>
+
+<p><code>head</code> 和 <code>tail</code> 是虚拟哨兵节点，不保存缓存数据。它们减少了处理链表首尾时的特殊分支。</p>
+<h3 id="关键操作"><a href="#关键操作" class="headerlink" title="关键操作"></a>关键操作</h3><ol>
+<li><strong>读取命中</strong>：从 map 找到节点，摘下节点，再插入链表头部。</li>
+<li><strong>更新已有键</strong>：更新节点的值，再移动到头部。</li>
+<li><strong>添加新键</strong>：创建节点，写入 map，并插入头部。</li>
+<li><strong>超出容量</strong>：移除 <code>tail.prev</code>，同时从 map 删除该节点对应的键。</li>
+</ol>
+<h3 id="Java-实现"><a href="#Java-实现" class="headerlink" title="Java 实现"></a>Java 实现</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.HashMap;</span><br><span class="line"><span class="keyword">import</span> java.util.Map;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">LRUCache</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">int</span> capacity;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Map&lt;Integer, Node&gt; map = <span class="keyword">new</span> <span class="title class_">HashMap</span>&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">Node</span> &#123;</span><br><span class="line">        <span class="type">int</span> key;</span><br><span class="line">        <span class="type">int</span> value;</span><br><span class="line">        Node prev;</span><br><span class="line">        Node next;</span><br><span class="line"></span><br><span class="line">        Node() &#123;&#125;</span><br><span class="line"></span><br><span class="line">        Node(<span class="type">int</span> key, <span class="type">int</span> value) &#123;</span><br><span class="line">            <span class="built_in">this</span>.key = key;</span><br><span class="line">            <span class="built_in">this</span>.value = value;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">Node</span> <span class="variable">head</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Node</span>();</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">Node</span> <span class="variable">tail</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Node</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">LRUCache</span><span class="params">(<span class="type">int</span> capacity)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.capacity = capacity;</span><br><span class="line">        head.next = tail;</span><br><span class="line">        tail.prev = head;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">get</span><span class="params">(<span class="type">int</span> key)</span> &#123;</span><br><span class="line">        <span class="type">Node</span> <span class="variable">node</span> <span class="operator">=</span> map.get(key);</span><br><span class="line">        <span class="keyword">if</span> (node == <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        moveToHead(node);</span><br><span class="line">        <span class="keyword">return</span> node.value;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">put</span><span class="params">(<span class="type">int</span> key, <span class="type">int</span> value)</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (capacity &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="type">Node</span> <span class="variable">node</span> <span class="operator">=</span> map.get(key);</span><br><span class="line">        <span class="keyword">if</span> (node != <span class="literal">null</span>) &#123;</span><br><span class="line">            node.value = value;</span><br><span class="line">            moveToHead(node);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="type">Node</span> <span class="variable">newNode</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Node</span>(key, value);</span><br><span class="line">        map.put(key, newNode);</span><br><span class="line">        addToHead(newNode);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (map.size() &gt; capacity) &#123;</span><br><span class="line">            <span class="type">Node</span> <span class="variable">oldest</span> <span class="operator">=</span> tail.prev;</span><br><span class="line">            removeNode(oldest);</span><br><span class="line">            map.remove(oldest.key);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">addToHead</span><span class="params">(Node node)</span> &#123;</span><br><span class="line">        node.prev = head;</span><br><span class="line">        node.next = head.next;</span><br><span class="line">        head.next.prev = node;</span><br><span class="line">        head.next = node;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">removeNode</span><span class="params">(Node node)</span> &#123;</span><br><span class="line">        node.prev.next = node.next;</span><br><span class="line">        node.next.prev = node.prev;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">moveToHead</span><span class="params">(Node node)</span> &#123;</span><br><span class="line">        removeNode(node);</span><br><span class="line">        addToHead(node);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里用 <code>map.size()</code> 判断容量，省去了单独维护 <code>size</code> 字段的工作，也避免 <code>size</code> 和 map 中实际条目数发生不一致。<code>capacity &lt;= 0</code> 的判断让实现能够处理非正容量；LeetCode 146 的容量约束通常大于等于 1。</p>
+<hr>
+<h2 id="三、使用-LinkedHashMap-实现"><a href="#三、使用-LinkedHashMap-实现" class="headerlink" title="三、使用 LinkedHashMap 实现"></a>三、使用 LinkedHashMap 实现</h2><p><code>LinkedHashMap</code> 同时维护哈希表和链表，默认按照插入顺序遍历。它还提供访问顺序模式：构造方法第三个参数传 <code>true</code> 后，访问过的条目会移动到最近使用的一端，适合构造 LRU 缓存。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.LinkedHashMap;</span><br><span class="line"><span class="keyword">import</span> java.util.Map;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">LRUCache</span> <span class="keyword">extends</span> <span class="title class_">LinkedHashMap</span>&lt;Integer, Integer&gt; &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">int</span> capacity;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">LRUCache</span><span class="params">(<span class="type">int</span> capacity)</span> &#123;</span><br><span class="line">        <span class="built_in">super</span>(capacity, <span class="number">0.75F</span>, <span class="literal">true</span>);</span><br><span class="line">        <span class="built_in">this</span>.capacity = capacity;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="type">int</span> <span class="title function_">get</span><span class="params">(<span class="type">int</span> key)</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">super</span>.getOrDefault(key, -<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">put</span><span class="params">(<span class="type">int</span> key, <span class="type">int</span> value)</span> &#123;</span><br><span class="line">        <span class="built_in">super</span>.put(key, value);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="type">boolean</span> <span class="title function_">removeEldestEntry</span><span class="params">(</span></span><br><span class="line"><span class="params">            Map.Entry&lt;Integer, Integer&gt; eldest)</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> size() &gt; capacity;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="构造参数"><a href="#构造参数" class="headerlink" title="构造参数"></a>构造参数</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">super</span>(capacity, <span class="number">0.75F</span>, <span class="literal">true</span>);</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>第一个参数是初始容量，不是最大条目数。</li>
+<li>第二个参数是负载因子。</li>
+<li>第三个参数 <code>true</code> 开启访问顺序；<code>false</code> 表示插入顺序。</li>
+</ul>
+<p>访问顺序模式下，<code>get</code>、<code>getOrDefault</code> 等命中条目的操作会刷新其位置。<code>removeEldestEntry</code> 在添加新映射后被调用；返回 <code>true</code> 时，父类会自动移除最老的条目。<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/26/docs/api/java.base/java/util/LinkedHashMap.html">Oracle LinkedHashMap API</a></p>
+<h3 id="两种实现如何选择？"><a href="#两种实现如何选择？" class="headerlink" title="两种实现如何选择？"></a>两种实现如何选择？</h3><table>
+<thead>
+<tr>
+<th>实现方式</th>
+<th>优点</th>
+<th>适合场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>LinkedHashMap</code></td>
+<td>代码少，访问顺序与淘汰逻辑由类库支持</td>
+<td>需要快速实现 LRU</td>
+</tr>
+<tr>
+<td><code>HashMap</code> + 双向链表</td>
+<td>能清楚看到数据结构和指针操作，也方便扩展</td>
+<td>学习原理或需要定制缓存行为</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="四、为什么手写缓存需要整体加锁？"><a href="#四、为什么手写缓存需要整体加锁？" class="headerlink" title="四、为什么手写缓存需要整体加锁？"></a>四、为什么手写缓存需要整体加锁？</h2><p>手写 LRU 的一次操作可能同时改动 map 和链表。例如添加条目要完成“写 map、插入链表、检查容量、淘汰尾节点、删除 map 中的键”等步骤。如果线程在这些步骤之间交错执行，map 和链表就可能不再对应。</p>
+<p>另外，<code>get</code> 并非纯读取：它会把命中的节点移到链表头部。因此 <code>get</code> 和 <code>put</code> 都要使用同一把锁保护完整操作。</p>
+<p>最简单的改法是在上一节手写实现中改成：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="type">int</span> <span class="title function_">get</span><span class="params">(<span class="type">int</span> key)</span> &#123;</span><br><span class="line">    <span class="comment">// 原 get 方法内容</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">put</span><span class="params">(<span class="type">int</span> key, <span class="type">int</span> value)</span> &#123;</span><br><span class="line">    <span class="comment">// 原 put 方法内容</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>两个同步方法锁住同一个缓存实例。链表辅助方法保持 <code>private</code>，只从这两个已加锁的方法调用即可。这样一次操作不会被同一缓存对象上的另一个 <code>get</code> 或 <code>put</code> 插入打断。</p>
+<p>这种实现易于理解，但同一个缓存对象上的操作会排队执行。对于 LeetCode 面试题和简单共享缓存，通常足够。</p>
+<hr>
+<h2 id="五、为什么不能只换成-ConcurrentHashMap？"><a href="#五、为什么不能只换成-ConcurrentHashMap？" class="headerlink" title="五、为什么不能只换成 ConcurrentHashMap？"></a>五、为什么不能只换成 ConcurrentHashMap？</h2><p><code>ConcurrentHashMap</code> 保证 map 自身的单次操作支持并发访问，但它不会保护双向链表，也不会自动把一串 map 和链表操作合成一个原子操作。它也不提供一个能阻止所有并发访问的整表锁。<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/26/docs/api/java.base/java/util/concurrent/ConcurrentHashMap.html">Oracle ConcurrentHashMap API</a></p>
+<p>例如两个线程同时执行 <code>put</code>，都可能先读到“键不存在”，然后各自创建节点并插入链表。最终 map 可能只指向其中一个节点，而另一个节点仍留在链表里，导致缓存状态不一致。</p>
+<p>因此：</p>
+<ul>
+<li><strong>推荐做法</strong>：手写 LRU 使用 <code>HashMap</code>，并让整个 <code>get</code>、<code>put</code> 使用同一把锁。</li>
+<li>**只把 <code>HashMap</code> 换成 <code>ConcurrentHashMap</code>**：不能保证整个缓存线程安全。</li>
+<li><strong>换成 <code>ConcurrentHashMap</code> 后仍给整个 <code>get</code>、<code>put</code> 加同一把锁</strong>：可以保护整体，但全局锁已经串行化缓存操作，通常没有必要再使用 <code>ConcurrentHashMap</code>。</li>
+</ul>
+<p><code>ConcurrentHashMap</code> 还不允许 <code>null</code> 键或 <code>null</code> 值；本例使用整数键和节点值，不会用到 <code>null</code> 映射。<a target="_blank" rel="noopener" href="https://docs.oracle.com/en/java/javase/26/docs/api/java.base/java/util/concurrent/ConcurrentHashMap.html">Oracle ConcurrentHashMap API</a></p>
+<hr>
+<h2 id="六、复杂度与常见错误"><a href="#六、复杂度与常见错误" class="headerlink" title="六、复杂度与常见错误"></a>六、复杂度与常见错误</h2><p>手写版和 <code>LinkedHashMap</code> 版的基本操作都能达到平均 <code>O(1)</code>：</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th align="right">平均时间复杂度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>查询 map、插入、删除</td>
+<td align="right"><code>O(1)</code></td>
+</tr>
+<tr>
+<td>链表插入头部、删除已知节点、移动节点</td>
+<td align="right"><code>O(1)</code></td>
+</tr>
+<tr>
+<td><code>get</code></td>
+<td align="right"><code>O(1)</code></td>
+</tr>
+<tr>
+<td><code>put</code></td>
+<td align="right"><code>O(1)</code></td>
+</tr>
+</tbody></table>
+<p>常见错误：</p>
+<ol>
+<li><strong>只更新 map，不更新链表</strong>：map 和 LRU 顺序会不一致。</li>
+<li><strong>更新已有键时不移动节点</strong>：题意通常把 <code>put</code> 更新视为一次使用。</li>
+<li><strong>命中 <code>get</code> 后不移动节点</strong>：无法正确记录最近访问顺序。</li>
+<li><strong>淘汰时只从链表删除，忘记从 map 删除</strong>：map 会留下已淘汰节点。</li>
+<li><strong>只同步 map 操作</strong>：无法保护 map 与链表之间的复合操作。</li>
+<li>**容量为 0 时仍删除 <code>tail.prev</code>**：此时 <code>tail.prev</code> 是虚拟头节点，可能导致空指针异常；应提前处理。</li>
+</ol>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>LRU 的关键是同时维护“快速按键查找”和“最近使用顺序”。手写版本使用 <code>HashMap + 双向链表</code>；简洁版本可以使用访问顺序模式的 <code>LinkedHashMap</code>。如果手写缓存要线程安全，应对 <code>get</code> 和 <code>put</code> 的完整逻辑加同一把锁。<code>ConcurrentHashMap</code> 只保证 map 自身操作的并发安全，不能代替对链表和整个缓存状态的同步。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a target="_blank" rel="noopener" href="https://github.com/ZxlDragonDoctor">猪教授</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://zxldragondoctor.github.io/2026/10/15/LRU%E7%BC%93%E5%AD%98%E5%AE%9E%E7%8E%B0%E4%B8%8E%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">https://zxldragondoctor.github.io/2026/10/15/LRU%E7%BC%93%E5%AD%98%E5%AE%9E%E7%8E%B0%E4%B8%8E%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://ZxlDragonDoctor.github.io" target="_blank">花独柒</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Java/">Java</a><a class="post-meta__tags" href="/tags/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a><a class="post-meta__tags" href="/tags/LRU/">LRU</a><a class="post-meta__tags" href="/tags/%E5%B9%B6%E5%8F%91/">并发</a></div><div class="post-share"><div class="social-share" data-image="/img/zxl_2.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/10/15/%E6%9C%80%E7%9F%AD%E6%97%A0%E5%BA%8F%E8%BF%9E%E7%BB%AD%E5%AD%90%E6%95%B0%E7%BB%84%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="最短无序连续子数组学习笔记"><img class="cover" src="/img/loading.jpg" data-lazy-src="/img/zxl_5.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">最短无序连续子数组学习笔记</div></div><div class="info-2"><div class="info-item-1">最短无序连续子数组：排序对比与线性扫描这道题的关键，是找出数组中最短的一段连续区间：只要把这段区间排好序，整个数组就会有序。本文从排序后对比的直观方法出发，再介绍两种线性时间的边界查找方法。 对应力扣题目581. 最短无序连续子数组（Shortest Unsorted Continuous Subarray） 题目要求返回需要排序的最短连续子数组长度。如果数组已经有序，返回 0。 例如： 123输入：[2, 6, 4, 8, 10, 9, 15]输出：5说明：排序子数组 [6, 4, 8, 10, 9] 后，整个数组变为有序。   一、方法一：复制后排序，再比较不同位置先复制原数组并排序。排序后的数组是整个数组最终应该呈现的样子。找到原数组与排序结果最左边和最右边不同的位置，这两个位置之间就是需要排序的区间。 Java 实现1234567891011121314151617181920212223242526import java.util.Arrays;class Solution &#123;    public int findUnsortedSubarray(int[] ...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/09/22/Java%E5%88%97%E8%A1%A8%E4%B8%8E%E5%A4%9A%E7%BB%B4%E6%95%B0%E7%BB%84%E4%BA%92%E8%BD%AC%E5%8F%8A%E6%89%93%E5%8D%B0-%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/" title="Java列表与多维数组互转及打印-学习记录"><img class="cover" src="/img/loading.jpg" data-lazy-src="/img/zxl_6.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-22</div><div class="info-item-2">Java列表与多维数组互转及打印-学习记录</div></div><div class="info-2"><div class="info-item-1">Java 列表与多维数组互转及打印 · 学习记录   项目 内容    主题 List ↔ 二维&#x2F;多维数组 转换与打印   语言 Java（JDK 8+）   记录日期 2026-09-22   类型 个人学习笔记 &#x2F; 速查手册    一、学习目标整理 Java 中 List 与二维&#x2F;多维数组之间的常见转换写法，并总结调试时的打印技巧，形成一份可反复查阅的学习记录。学完后应能独立完成：  将 List&lt;List&lt;T&gt;&gt; &#x2F; List&lt;T[]&gt; 转为 T[][] 或更高维数组 将二维、多维数组还原为 List（含可变&#x2F;不可变差异） 将一维 List 按固定列宽 reshape 成二维数组 正确打印二维&#x2F;多维数组与嵌套 List，避免只输出对象地址  二、前置概念Java 中「列表」通常指 java.util.List（ArrayList、LinkedList、Arrays.asList 结果等）；「二维数组」是 T[][]（数组的数组）；「多维数组」泛指 T[][][] 及更高维。 二者...</div></div></div></a><a class="pagination-related" href="/2026/09/23/%E5%8D%8E%E4%B8%BAOD%E7%AE%97%E6%B3%95%E9%A2%98%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/" title="华为OD算法题学习记录"><img class="cover" src="/img/loading.jpg" data-lazy-src="/img/zxl_5.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-23</div><div class="info-item-2">华为OD算法题学习记录</div></div><div class="info-2"><div class="info-item-1">算法题学习记录覆盖本场对话中的 7 道题：题意要点、解法模板、自己代码里踩过的坑、以及通用注意事项。  一、电网负载均衡（连通块 &#x2F; BFS &#x2F; 并查集）题意：N 个节点有负载，M 条无向边。同一连通块为一个供电区。不均衡度 &#x3D;（最大负载 − 最小负载）× 节点数。输出所有供电区中的最大值；无有效供电区（节点数 &lt; 2）输出 -1。 解法：  BFS&#x2F;DFS：按未访问点枚举连通块，块内统计 max &#x2F; min &#x2F; size。 并查集：union 时在根上合并 size / max / min，最后扫根。  踩过的坑：    坑 现象 正确做法    把无向图当有向图 只扫 g[j][0]==t，边写成 [2,1] 时从 1 找不到 2 邻接表两端都加边   无解输出错误 全是孤立点时打印 Integer.MIN_VALUE 无有效区时输出 -1   样例掩盖 bug [[0,1],[1,2],[3,4]] 恰好是小→大，单向 BFS 也能过 必须造反向边反例   注意：  两条件写法：(max-min)*size，...</div></div></div></a><a class="pagination-related" href="/2026/10/15/%E6%9C%80%E5%A4%A7%E4%B9%98%E7%A7%AF%E5%AD%90%E6%95%B0%E7%BB%84%E4%B8%89%E7%A7%8D%E5%86%99%E6%B3%95%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="最大乘积子数组三种写法学习笔记"><img class="cover" src="/img/loading.jpg" data-lazy-src="/img/zxl_3.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-15</div><div class="info-item-2">最大乘积子数组三种写法学习笔记</div></div><div class="info-2"><div class="info-item-1">最大乘积子数组的三种写法：回溯、动态规划与滚动变量「最大乘积」看起来只是在数组里找一个乘积最大的范围，但负数和零会让问题变得特别一些。本文从最初的回溯代码出发，再介绍完整动态规划和滚动变量优化，重点讲清楚每种写法解决什么问题。 本文按三种思路展开：  回溯枚举任意子集：理解最初代码为什么不适用于连续子数组。 动态规划数组：用 maxF 和 minF 记录每个位置的状态。 滚动变量：只保留上一位置的状态，将空间降到 O(1)。  对应力扣题目152. 乘积最大子数组（Maximum Product Subarray）  一、先明确题目：子数组必须连续以常见的「最大乘积子数组」问题为例，给定一个整数数组，要求找出一个非空连续子数组，使子数组中的元素乘积最大。 例如： 123输入：[2, 3, -2, 4]答案：6说明：连续子数组 [2, 3] 的乘积是 6。  “连续”是关键。对于 [2, 3, -2, 4]，不能跳过 -2 再把 2、3、4 组合起来，因为它们不是原数组中的连续一段。  二、写法一：回溯代码实际枚举的是任意子集最初的回溯代码在做两件事：对每个元素尝试选或不选；并且先...</div></div></div></a><a class="pagination-related" href="/2026/09/23/%E4%BC%98%E5%85%88%E9%98%9F%E5%88%97%E4%B8%8E%E5%88%86%E6%B2%BB%E5%90%88%E5%B9%B6%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="优先队列与分治合并学习笔记"><img class="cover" src="/img/loading.jpg" data-lazy-src="/img/zxl_2.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-23</div><div class="info-item-2">优先队列与分治合并学习笔记</div></div><div class="info-2"><div class="info-item-1">Java 优先队列与分治合并：从合并 K 个有序链表到有序数组合并多个有序序列，是很适合学习优先队列和分治思想的一类题目。 这篇文章围绕三个问题展开：  使用优先队列合并 K 个有序链表 使用分治法合并 K 个有序链表 使用分治法合并 K 个有序数组  三种方法都利用了“局部有序”的条件，但组织计算的方式不同。读完后，你应该能知道什么时候用优先队列，什么时候用分治，以及 Java 中如何定义队列元素的优先级。  一、先认识 Java 的 PriorityQueue1. 什么是优先队列？普通队列通常按照先进先出的顺序取元素。优先队列则会根据元素的优先级决定取出顺序。 Java 的 PriorityQueue 默认是最小值优先：队头是当前最小的元素。调用 poll() 会取出并移除队头；调用 peek() 只查看队头，不移除元素。Oracle 文档列出的复杂度是：插入和取出为 O(log n)，查看队头为 O(1)。Oracle Java PriorityQueue 文档 常用方法如下：    方法 作用    offer(value) 将元素加入队列   poll() 取出并移除队...</div></div></div></a><a class="pagination-related" href="/2026/10/15/%E5%9B%9E%E6%96%87%E5%AD%90%E4%B8%B2%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="回文子串学习笔记"><img class="cover" src="/img/loading.jpg" data-lazy-src="/img/zxl_6.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-15</div><div class="info-item-2">回文子串学习笔记</div></div><div class="info-2"><div class="info-item-1">回文子串学习笔记：暴力枚举、动态规划与中心扩展对应力扣题目647. 回文子串（Palindromic Substrings） 题目要求统计字符串中所有回文子串的数量。子串必须连续；不同位置出现的相同字符串要分别计数。例如 &quot;aaa&quot; 中有 3 个 &quot;a&quot;、2 个 &quot;aa&quot; 和 1 个 &quot;aaa&quot;，答案是 6。 本文介绍三种常见方法：  暴力枚举子串并逐个判断。 动态规划，记录每个区间是否为回文。 中心扩展，从每个可能的回文中心向两边扩展。   一、先区分子串和子序列 子串（substring）：字符串中连续的一段字符。 子序列（subsequence）：可以跳过一些字符，但保留剩余字符的相对顺序。  例如字符串 &quot;aba&quot; 中，&quot;aa&quot; 是子序列，但不是子串，因为两个 a 中间隔着 b。 这也是回溯代码容易出错的地方：如果循环里可以跳过字符并递归选择后面的字符，那么枚举到的通常是子序列，不一定是子串。  二、最直接的方法：枚举每个子串一个子串可以由左右端点 le...</div></div></div></a><a class="pagination-related" href="/2026/10/15/%E6%9C%80%E7%9F%AD%E6%97%A0%E5%BA%8F%E8%BF%9E%E7%BB%AD%E5%AD%90%E6%95%B0%E7%BB%84%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="最短无序连续子数组学习笔记"><img class="cover" src="/img/loading.jpg" data-lazy-src="/img/zxl_5.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-15</div><div class="info-item-2">最短无序连续子数组学习笔记</div></div><div class="info-2"><div class="info-item-1">最短无序连续子数组：排序对比与线性扫描这道题的关键，是找出数组中最短的一段连续区间：只要把这段区间排好序，整个数组就会有序。本文从排序后对比的直观方法出发，再介绍两种线性时间的边界查找方法。 对应力扣题目581. 最短无序连续子数组（Shortest Unsorted Continuous Subarray） 题目要求返回需要排序的最短连续子数组长度。如果数组已经有序，返回 0。 例如： 123输入：[2, 6, 4, 8, 10, 9, 15]输出：5说明：排序子数组 [6, 4, 8, 10, 9] 后，整个数组变为有序。   一、方法一：复制后排序，再比较不同位置先复制原数组并排序。排序后的数组是整个数组最终应该呈现的样子。找到原数组与排序结果最左边和最右边不同的位置，这两个位置之间就是需要排序的区间。 Java 实现1234567891011121314151617181920212223242526import java.util.Arrays;class Solution &#123;    public int findUnsortedSubarray(int[] ...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="waline-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/loading.jpg" data-lazy-src="/img/total.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">猪教授</div><div class="author-info-description">纸上谈来终觉浅，绝知此事要躬行</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">80</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">24</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">6</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/ZxlDragonDoctor"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/ZxlDragonDoctor" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">欢迎来到花独柒的博客，记录生活，分享美好。</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#LRU-%E7%BC%93%E5%AD%98%EF%BC%9ALinkedHashMap%E3%80%81%E5%8F%8C%E5%90%91%E9%93%BE%E8%A1%A8%E4%B8%8E%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8"><span class="toc-number">1.</span> <span class="toc-text">LRU 缓存：LinkedHashMap、双向链表与线程安全</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AF%B9%E5%BA%94%E9%A2%98%E7%9B%AE"><span class="toc-number">1.1.</span> <span class="toc-text">对应题目</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E4%BB%80%E4%B9%88%E6%98%AF-LRU%EF%BC%9F"><span class="toc-number">1.2.</span> <span class="toc-text">一、什么是 LRU？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E6%89%8B%E5%86%99%E5%AE%9E%E7%8E%B0%EF%BC%9AHashMap-%E5%8F%8C%E5%90%91%E9%93%BE%E8%A1%A8"><span class="toc-number">1.3.</span> <span class="toc-text">二、手写实现：HashMap + 双向链表</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E6%93%8D%E4%BD%9C"><span class="toc-number">1.3.1.</span> <span class="toc-text">关键操作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Java-%E5%AE%9E%E7%8E%B0"><span class="toc-number">1.3.2.</span> <span class="toc-text">Java 实现</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E4%BD%BF%E7%94%A8-LinkedHashMap-%E5%AE%9E%E7%8E%B0"><span class="toc-number">1.4.</span> <span class="toc-text">三、使用 LinkedHashMap 实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9E%84%E9%80%A0%E5%8F%82%E6%95%B0"><span class="toc-number">1.4.1.</span> <span class="toc-text">构造参数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%A4%E7%A7%8D%E5%AE%9E%E7%8E%B0%E5%A6%82%E4%BD%95%E9%80%89%E6%8B%A9%EF%BC%9F"><span class="toc-number">1.4.2.</span> <span class="toc-text">两种实现如何选择？</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88%E6%89%8B%E5%86%99%E7%BC%93%E5%AD%98%E9%9C%80%E8%A6%81%E6%95%B4%E4%BD%93%E5%8A%A0%E9%94%81%EF%BC%9F"><span class="toc-number">1.5.</span> <span class="toc-text">四、为什么手写缓存需要整体加锁？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E8%83%BD%E5%8F%AA%E6%8D%A2%E6%88%90-ConcurrentHashMap%EF%BC%9F"><span class="toc-number">1.6.</span> <span class="toc-text">五、为什么不能只换成 ConcurrentHashMap？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E5%A4%8D%E6%9D%82%E5%BA%A6%E4%B8%8E%E5%B8%B8%E8%A7%81%E9%94%99%E8%AF%AF"><span class="toc-number">1.7.</span> <span class="toc-text">六、复杂度与常见错误</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">1.8.</span> <span class="toc-text">总结</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/10/15/LRU%E7%BC%93%E5%AD%98%E5%AE%9E%E7%8E%B0%E4%B8%8E%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="LRU缓存实现与线程安全学习笔记"><img src="/img/loading.jpg" data-lazy-src="/img/zxl_2.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="LRU缓存实现与线程安全学习笔记"/></a><div class="content"><a class="title" href="/2026/10/15/LRU%E7%BC%93%E5%AD%98%E5%AE%9E%E7%8E%B0%E4%B8%8E%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="LRU缓存实现与线程安全学习笔记">LRU缓存实现与线程安全学习笔记</a><time datetime="2026-10-15T10:30:00.000Z" title="发表于 2026-10-15 18:30:00">2026-10-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/10/15/%E6%9C%80%E7%9F%AD%E6%97%A0%E5%BA%8F%E8%BF%9E%E7%BB%AD%E5%AD%90%E6%95%B0%E7%BB%84%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="最短无序连续子数组学习笔记"><img src="/img/loading.jpg" data-lazy-src="/img/zxl_5.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="最短无序连续子数组学习笔记"/></a><div class="content"><a class="title" href="/2026/10/15/%E6%9C%80%E7%9F%AD%E6%97%A0%E5%BA%8F%E8%BF%9E%E7%BB%AD%E5%AD%90%E6%95%B0%E7%BB%84%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="最短无序连续子数组学习笔记">最短无序连续子数组学习笔记</a><time datetime="2026-10-15T10:20:00.000Z" title="发表于 2026-10-15 18:20:00">2026-10-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/10/15/%E5%9B%9E%E6%96%87%E5%AD%90%E4%B8%B2%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="回文子串学习笔记"><img src="/img/loading.jpg" data-lazy-src="/img/zxl_6.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="回文子串学习笔记"/></a><div class="content"><a class="title" href="/2026/10/15/%E5%9B%9E%E6%96%87%E5%AD%90%E4%B8%B2%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="回文子串学习笔记">回文子串学习笔记</a><time datetime="2026-10-15T10:10:00.000Z" title="发表于 2026-10-15 18:10:00">2026-10-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/10/15/%E6%9C%80%E5%A4%A7%E4%B9%98%E7%A7%AF%E5%AD%90%E6%95%B0%E7%BB%84%E4%B8%89%E7%A7%8D%E5%86%99%E6%B3%95%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="最大乘积子数组三种写法学习笔记"><img src="/img/loading.jpg" data-lazy-src="/img/zxl_3.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="最大乘积子数组三种写法学习笔记"/></a><div class="content"><a class="title" href="/2026/10/15/%E6%9C%80%E5%A4%A7%E4%B9%98%E7%A7%AF%E5%AD%90%E6%95%B0%E7%BB%84%E4%B8%89%E7%A7%8D%E5%86%99%E6%B3%95%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="最大乘积子数组三种写法学习笔记">最大乘积子数组三种写法学习笔记</a><time datetime="2026-10-15T10:00:00.000Z" title="发表于 2026-10-15 18:00:00">2026-10-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/09/23/%E4%BC%98%E5%85%88%E9%98%9F%E5%88%97%E4%B8%8E%E5%88%86%E6%B2%BB%E5%90%88%E5%B9%B6%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="优先队列与分治合并学习笔记"><img src="/img/loading.jpg" data-lazy-src="/img/zxl_2.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="优先队列与分治合并学习笔记"/></a><div class="content"><a class="title" href="/2026/09/23/%E4%BC%98%E5%85%88%E9%98%9F%E5%88%97%E4%B8%8E%E5%88%86%E6%B2%BB%E5%90%88%E5%B9%B6%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="优先队列与分治合并学习笔记">优先队列与分治合并学习笔记</a><time datetime="2026-09-23T10:10:00.000Z" title="发表于 2026-09-23 18:10:00">2026-09-23</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/wallhaven-gp8pdq.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2023 - 2026 By 猪教授</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.7.0</a></span></div><div class="footer_custom_text">纸上谈来终觉浅，绝知此事要躬行</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.7.0"></script><script src="/js/main.js?v=5.7.0"></script><script src="/js/tw_cn.js?v=5.7.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page@5.2.0/instantpage.min.js" type="module"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.iife.min.js"></script><script src="https://cdn.jsdelivr.net/npm/node-snackbar@0.1.16/dist/snackbar.min.js"></script><div class="js-pjax"><script>(() => {
+  const changeScriptToMath = article => {
+    article.querySelectorAll('script[type^="math/tex"]').forEach(el => {
+      const display = /mode=display/.test(el.type)
+      const node = document.createElement(display ? 'div' : 'span')
+      node.textContent = display
+        ? `$$${el.textContent}$$`
+        : `$${el.textContent}$`
+      el.parentNode.replaceChild(node, el)
+    })
+  }
+
+  const loadMathjax = () => {
+    const article = document.getElementById('article-container')
+    if (!article || article.querySelector('.hbe-container')) return
+    changeScriptToMath(article)
+
+    if (!window.MathJax) {
+      window.MathJax = {
+        loader: {
+          load: [
+            // Four font extension packages (optional)
+            //- '[tex]/bbm',
+            //- '[tex]/bboldx',
+            //- '[tex]/dsfont',
+            '[tex]/mhchem',
+            'ui/lazy'
+          ],
+          paths: {
+            'mathjax-newcm': '[mathjax]/../@mathjax/mathjax-newcm-font',
+
+            //- // Four font extension packages (optional)
+            //- 'mathjax-bbm-extension': '[mathjax]/../@mathjax/mathjax-bbm-font-extension',
+            //- 'mathjax-bboldx-extension': '[mathjax]/../@mathjax/mathjax-bboldx-font-extension',
+            //- 'mathjax-dsfont-extension': '[mathjax]/../@mathjax/mathjax-dsfont-font-extension',
+            'mathjax-mhchem-extension': '[mathjax]/../@mathjax/mathjax-mhchem-font-extension'
+          }
+        },
+        output: {
+          font: 'mathjax-newcm',
+        },
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          tags: 'ams',
+          packages: {
+            '[+]': [
+              'mhchem'
+            ]
+          }
+        },
+        chtml: {
+          scale: 1.1
+        },
+        options: {
+          lazyMargin: '200px',
+          enableMenu: true,
+          menuOptions: {
+            settings: {
+              enrich: false  // Turn off Braille and voice narration text automatic generation
+            }
+          },
+        }
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.min.js'
+      script.id = 'MathJax-script'
+      script.async = true
+      document.head.appendChild(script)
+    } else {
+      MathJax.typesetClear()
+      MathJax.typesetPromise([ article ])
+    }
+  }
+
+  btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+  window.pjax ? loadMathjax() : window.addEventListener('load', loadMathjax)
+})()</script><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.innerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+
+    setTimeout(() => URL.revokeObjectURL(url), 5000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    // Clean up previous event listeners and pending frames
+    if (wrap.__mermaidAbortController) {
+      wrap.__mermaidAbortController.abort()
+      if (wrap.__mermaidRafId) cancelAnimationFrame(wrap.__mermaidRafId)
+    }
+    const ac = new AbortController()
+    wrap.__mermaidAbortController = ac
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+    // Disable default gestures to prevent scroll chaining and pinch-zoom penetration in Chrome
+    svg.style.touchAction = 'none'
+
+    // Cache BoundingClientRect, throttled on scroll to reduce reflow
+    let cachedRect = svg.getBoundingClientRect()
+    let rectDirty = false
+    const markRectDirty = () => { rectDirty = true }
+    window.addEventListener('resize', markRectDirty, { signal: ac.signal })
+    window.addEventListener('scroll', markRectDirty, { signal: ac.signal, capture: true })
+    const getRect = () => {
+      if (rectDirty) {
+        cachedRect = svg.getBoundingClientRect()
+        rectDirty = false
+      }
+      return cachedRect
+    }
+
+    // Precompute clamp bounds from initial viewBox
+    const minW = initVb[2] * 0.1
+    const maxW = initVb[2] * 10
+    const minH = initVb[3] * 0.1
+    const maxH = initVb[3] * 10
+    const clampVb = vb => {
+      const out = vb.slice()
+      out[2] = clamp(out[2], minW, maxW)
+      out[3] = clamp(out[3], minH, maxH)
+      return out
+    }
+
+    // Throttle DOM updates using requestAnimationFrame
+    let pendingVb = null
+    let rafId = null
+    const applyVb = () => {
+      if (pendingVb) {
+        wrap.__mermaidCurViewBox = pendingVb
+        setSvgViewBox(svg, pendingVb)
+        pendingVb = null
+      }
+      rafId = null
+      wrap.__mermaidRafId = null
+    }
+    const setCurVb = vb => {
+      pendingVb = clampVb(vb)
+      if (!rafId) {
+        rafId = requestAnimationFrame(applyVb)
+        wrap.__mermaidRafId = rafId
+      }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      lastPointerX: 0,
+      lastPointerY: 0
+    }
+
+    const onPointerDown = e => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      const curVb = wrap.__mermaidCurViewBox
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+      if (state.pointers.size === 1) {
+        state.startVb = curVb.slice()
+        state.lastPointerX = e.clientX
+        state.lastPointerY = e.clientY
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = curVb.slice()
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+      const curVb = wrap.__mermaidCurViewBox
+      const rect = getRect()
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = state.pointers.values().next().value
+        const dxClient = p.x - state.lastPointerX
+        const dyClient = p.y - state.lastPointerY
+        state.lastPointerX = p.x
+        state.lastPointerY = p.y
+        const dx = dxClient * (curVb[2] / rect.width)
+        const dy = dyClient * (curVb[3] / rect.height)
+        setCurVb([curVb[0] - dx, curVb[1] - dy, curVb[2], curVb[3]])
+        return
+      }
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const px = curVb[0] + (cx - rect.left) * (curVb[2] / rect.width)
+        const py = curVb[1] + (cy - rect.top) * (curVb[3] / rect.height)
+        setCurVb(zoomAtPoint(state.startVb, factor, px, py))
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      // Release PointerCapture to avoid event capture anomalies
+      if (svg.hasPointerCapture && svg.hasPointerCapture(e.pointerId)) {
+        svg.releasePointerCapture(e.pointerId)
+      }
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+      } else if (state.pointers.size === 1) {
+        const p = state.pointers.values().next().value
+        state.lastPointerX = p.x
+        state.lastPointerY = p.y
+      }
+    }
+
+    const onWheel = e => {
+      // Prevent event bubbling from triggering external scroll
+      e.preventDefault()
+      e.stopPropagation()
+      // Normalize deltaY across deltaMode (Chrome uses pixels, Safari uses lines)
+      let delta = e.deltaY
+      if (e.deltaMode === 1) delta *= 16
+      else if (e.deltaMode === 2) delta *= 400
+
+      // Continuous zoom factor: smoother than fixed 1.1/0.9 steps
+      const zoomFactor = Math.pow(1.001, delta)
+
+      const curVb = wrap.__mermaidCurViewBox
+      const rect = getRect()
+      const px = curVb[0] + (e.clientX - rect.left) * (curVb[2] / rect.width)
+      const py = curVb[1] + (e.clientY - rect.top) * (curVb[3] / rect.height)
+      setCurVb(zoomAtPoint(curVb, zoomFactor, px, py))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (init) setCurVb(init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown, { signal: ac.signal })
+    svg.addEventListener('pointermove', onPointerMove, { signal: ac.signal })
+    svg.addEventListener('pointerup', onPointerUpOrCancel, { signal: ac.signal })
+    svg.addEventListener('pointercancel', onPointerUpOrCancel, { signal: ac.signal })
+    svg.addEventListener('wheel', onWheel, { passive: false, signal: ac.signal })
+    svg.addEventListener('dblclick', onDblClick, { signal: ac.signal })
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      // Clean up event listeners before removing old SVG
+      if (item.__mermaidAbortController) {
+        item.__mermaidAbortController.abort()
+      }
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      let config = {}
+      try {
+        config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      } catch (e) {
+        console.warn('[mermaid] failed to parse dataset.config:', e)
+      }
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+      const handleError = err => {
+        console.error(`[mermaid] render failed for block #${index}:`, err)
+        const errorEl = document.createElement('div')
+        errorEl.className = 'mermaid-error'
+        errorEl.textContent = `Mermaid render error: ${err.message || err}`
+        mermaidSrc.insertAdjacentElement('afterend', errorEl)
+      }
+
+      try {
+        const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+        // mermaid v9 and v10 compatibility
+        if (typeof renderFn === 'string') {
+          renderMermaid(renderFn)
+        } else {
+          renderFn.then(({ svg }) => renderMermaid(svg)).catch(handleError)
+        }
+      } catch (err) {
+        handleError(err)
+      }
+    })
+  }
+
+  const codeToMermaid = $article => {
+    const codeMermaidEle = $article.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    const $article = document.getElementById('article-container')
+    if (!$article) return
+
+    if (true) codeToMermaid($article)
+    const $mermaid = $article.querySelectorAll('.mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script><script>(() => {
+  const applyThemeDefaultsConfig = theme => {
+    if (theme === 'dark-mode') {
+      Chart.defaults.color = "rgba(255, 255, 255, 0.8)"
+      Chart.defaults.borderColor = "rgba(255, 255, 255, 0.2)"
+      Chart.defaults.scale.ticks.backdropColor = "transparent"
+    } else {
+      Chart.defaults.color = "rgba(0, 0, 0, 0.8)"
+      Chart.defaults.borderColor = "rgba(0, 0, 0, 0.1)"
+      Chart.defaults.scale.ticks.backdropColor = "transparent"
+    }
+  }
+
+  // Recursively traverse the config object and automatically apply theme-specific color schemes
+  const applyThemeConfig = (obj, theme) => {
+    if (typeof obj !== 'object' || obj === null) return
+
+    Object.keys(obj).forEach(key => {
+      const value = obj[key]
+      // If the property is an object and has theme-specific options, apply them
+      if (typeof value === 'object' && value !== null) {
+        if (value[theme]) {
+          obj[key] = value[theme] // Apply the value for the current theme
+        } else {
+          // Recursively process child objects
+          applyThemeConfig(value, theme)
+        }
+      }
+    })
+  }
+
+  const runChartJS = ele => {
+    window.loadChartJS = true
+
+    Array.from(ele).forEach((item, index) => {
+      const chartSrc = item.firstElementChild
+      const chartID = item.getAttribute('data-chartjs-id') || ('chartjs-' + index) // Use custom ID or default ID
+      const width = item.getAttribute('data-width')
+      const existingCanvas = document.getElementById(chartID)
+
+      // If a canvas already exists, remove it to avoid rendering duplicates
+      if (existingCanvas) {
+          existingCanvas.parentNode.remove()
+      }
+
+      const chartDefinition = chartSrc.textContent
+      const canvas = document.createElement('canvas')
+      canvas.id = chartID
+
+      const div = document.createElement('div')
+      div.className = 'chartjs-wrap'
+
+      if (width) {
+        div.style.width = width
+      }
+
+      div.appendChild(canvas)
+      chartSrc.insertAdjacentElement('afterend', div)
+
+      const ctx = document.getElementById(chartID).getContext('2d')
+
+      const config = JSON.parse(chartDefinition)
+
+      const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark-mode' : 'light-mode'
+
+      // Set default styles (initial setup)
+      applyThemeDefaultsConfig(theme)
+
+      // Automatically traverse the config and apply dual-mode color schemes
+      applyThemeConfig(config, theme)
+
+      new Chart(ctx, config)
+    })
+  }
+
+  const loadChartJS = () => {
+    const chartJSEle = document.querySelectorAll('#article-container .chartjs-container')
+    if (chartJSEle.length === 0) return
+
+    window.loadChartJS ? runChartJS(chartJSEle) : btf.getScript('https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js').then(() => runChartJS(chartJSEle))
+  }
+
+  // Listen for theme change events
+  btf.addGlobalFn('themeChange', loadChartJS, 'chartjs')
+  btf.addGlobalFn('encrypt', loadChartJS, 'chartjs')
+
+  window.pjax ? loadChartJS() : document.addEventListener('DOMContentLoaded', loadChartJS)
+})()</script><script>(() => {
+  const abcjsInit = () => {
+    const abcjsFn = () => {
+      const $article = document.getElementById("article-container")
+      if (!$article || $article.querySelector(".hbe-container")) return
+
+      setTimeout(() => {
+        const sheets = $article.querySelectorAll(".abc-music-sheet")
+        for (let i = 0; i < sheets.length; i++) {
+          const ele = sheets[i]
+          if (ele.children.length > 0) continue
+
+          // Parse parameters from data-params attribute
+          let params = {}
+          const dp = ele.getAttribute("data-params")
+          if (dp) {
+            try {
+              params = JSON.parse(dp)
+            } catch (e) {
+              console.error("Failed to parse data-params:", e)
+            }
+          }
+
+          // Merge parsed parameters with the responsive option
+          // Ensures params content appears before responsive
+          const options = { ...params, responsive: "resize" }
+
+          // Render the music score using ABCJS.renderAbc
+          ABCJS.renderAbc(ele, ele.textContent, options)
+        }
+      }, 100)
+    }
+
+    if (typeof ABCJS === "object" && ABCJS !== null) {
+      abcjsFn()
+    } else {
+      btf.getScript("https://cdn.jsdelivr.net/npm/abcjs@6.6.4/dist/abcjs-basic-min.min.js").then(abcjsFn)
+    }
+  }
+
+  if (window.pjax) {
+    abcjsInit()
+  } else {
+    window.addEventListener("load", abcjsInit)
+  }
+
+  btf.addGlobalFn("encrypt", abcjsInit, "abcjs")
+})()</script><script>(() => {
+  let initFn = window.walineFn || null
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = {"locale":{"placeholder":"欢迎留下你的评论哦~"}}
+
+  const destroyWaline = ele => ele.destroy()
+
+  const initWaline = (Fn, el = document, path = window.location.pathname) => {
+    const waline = Fn({
+      el: el.querySelector('#waline-wrap'),
+      serverURL: 'https://waline-qzmr.vercel.app/',
+      pageview: false,
+      dark: 'html[data-theme="dark"]',
+      comment: false,
+      ...option,
+      path: isShuoshuo ? path : (option && option.path) || path
+    })
+
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyWaline = () => {
+        destroyWaline(waline)
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+  }
+
+  const loadWaline = (el, path) => {
+    if (initFn) initWaline(initFn, el, path)
+    else {
+      btf.getCSS('https://cdn.jsdelivr.net/npm/@waline/client@3.15.2/dist/waline.min.css')
+        .then(() => import('https://cdn.jsdelivr.net/npm/@waline/client@3.15.2/dist/waline.min.js'))
+        .then(({ init }) => {
+          initFn = init || Waline.init
+          initWaline(initFn, el, path)
+          window.walineFn = initFn
+        })
+    }
+  }
+
+  if (isShuoshuo) {
+    'Waline' === 'Waline'
+      ? window.shuoshuoComment = { loadComment: loadWaline } 
+      : window.loadOtherComment = loadWaline
+    return
+  }
+
+  if ('Waline' === 'Waline' || !true) {
+    if (true) btf.loadComment(document.getElementById('waline-wrap'),loadWaline)
+    else setTimeout(loadWaline, 0)
+  } else {
+    window.loadOtherComment = loadWaline
+  }
+})()</script></div><script>window.newestComments = {
+  changeContent: content => {
+    if (content === '') return content
+
+    content = content.replace(/<img.*?src="(.*?)"?[^\>]+>/ig, '[图片]') // replace image link
+    content = content.replace(/<a[^>]+?href=["']?([^"']+)["']?[^>]*>([^<]+)<\/a>/gi, '[链接]') // replace url
+    content = content.replace(/<pre><code>.*?<\/pre>/gi, '[代码]') // replace code
+    content = content.replace(/<code>.*?<\/code>/gi, '[代码]') // replace code
+    content = content.replace(/<[^>]+>/g, "") // remove html tag
+
+    if (content.length > 150) {
+      content = content.substring(0, 150) + '...'
+    }
+    return content
+  },
+
+  generateHtml: (array, ele) => {
+    let result = ''
+
+    if (array.length) {
+      for (let i = 0; i < array.length; i++) {
+        result += '<div class="aside-list-item">'
+
+        if (true && array[i].avatar) {
+          const imgAttr = 'data-lazy-src'
+          const lazyloadNative = ''
+          result += `<a href="${array[i].url}" class="thumbnail"><img ${imgAttr}="${array[i].avatar}" alt="${array[i].nick}" ${lazyloadNative}></a>`
+        }
+
+        result += `<div class="content">
+        <a class="comment" href="${array[i].url}" title="${array[i].content}">${array[i].content}</a>
+        <div class="name"><span>${array[i].nick} / </span><time datetime="${array[i].date}">${btf.diffDate(array[i].date, true)}</time></div>
+        </div></div>`
+      }
+    } else {
+      result += '暂无评论'
+    }
+
+    ele.innerHTML = result
+    window.lazyLoadInstance && window.lazyLoadInstance.update()
+    window.pjax && window.pjax.refresh(ele)
+  },
+
+  newestCommentInit: (name, getComment) => {
+    const $dom = document.querySelector('#card-newest-comments .aside-list')
+    if ($dom) {
+      const data = btf.saveToLocal.get(name)
+      if (data) {
+        newestComments.generateHtml(JSON.parse(data), $dom)
+      } else {
+        getComment($dom)
+      }
+    }
+  },
+
+  run: (name, getComment) => {
+    newestComments.newestCommentInit(name, getComment)
+    btf.addGlobalFn('pjaxComplete', () => newestComments.newestCommentInit(name, getComment), name)
+  }
+}</script><script>window.addEventListener('load', () => {
+  const keyName = 'waline-newest-comments'
+  const { changeContent, generateHtml, run } = window.newestComments
+
+  const getComment = async (ele) => {
+    try {
+      const res = await fetch('https://waline-qzmr.vercel.app/api/comment?type=recent&count=6')
+      const result = await res.json()
+      const walineArray = result.data.map(e => {
+        return {
+          'content': changeContent(e.comment),
+          'avatar': e.avatar,
+          'nick': e.nick,
+          'url': e.url + '#' + e.objectId,
+          'date': e.time || e.insertedAt
+        }
+      })
+      btf.saveToLocal.set(keyName, JSON.stringify(walineArray), 10/(60*24))
+      generateHtml(walineArray, ele)
+    } catch (err) {
+      console.error(err)
+      ele.textContent= "无法获取评论，请确认相关配置是否正确"
+    }
+  }
+
+  run(keyName, getComment)
+})</script><canvas class="fireworks" mobile="false"></canvas><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/fireworks.min.js"></script><script defer="defer" id="ribbon" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/canvas-ribbon.min.js" size="150" alpha="0.6" zIndex="-1" mobile="false" data-click="false"></script><script defer="defer" id="fluttering_ribbon" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/canvas-fluttering-ribbon.min.js"></script><script id="canvas_nest" defer="defer" color="135,180,240" opacity="0.7" zIndex="-1" count="99" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/canvas-nest.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = false;
+document.body.addEventListener('input', POWERMODE);
+</script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/click-heart.min.js" async="async" mobile="false"></script><script id="click-show-text" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/click-show-text.min.js" data-mobile="false" data-text="努力,加油,奋斗" data-fontsize="15px" data-random="false" async="async"></script><script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.min.js" defer="defer"></script><script>document.addEventListener('DOMContentLoaded', () => {
+  const pjaxSelectors = ["head > title","#config-diff","#body-wrap","#rightside-config-hide","#rightside-config-show",".js-pjax"]
+
+  window.pjax = new Pjax({
+    elements: 'a:not([target="_blank"]):not([data-fancybox])',
+    selectors: pjaxSelectors,
+    cacheBust: false,
+    analytics: false,
+    scrollRestoration: false
+  })
+
+  const triggerPjaxFn = (val) => {
+    if (!val) return
+    Object.values(val).forEach(fn => {
+      try {
+        fn()
+      } catch (err) {
+        console.debug('Pjax callback failed:', err)
+      }
+    })
+  }
+
+  document.addEventListener('pjax:send', () => {
+    // removeEventListener
+    btf.removeGlobalFnEvent('pjaxSendOnce')
+    btf.removeGlobalFnEvent('themeChange')
+
+    // reset readmode
+    const $bodyClassList = document.body.classList
+    if ($bodyClassList.contains('read-mode')) $bodyClassList.remove('read-mode')
+
+    triggerPjaxFn(window.globalFn.pjaxSend)
+  })
+
+  document.addEventListener('pjax:complete', () => {
+    btf.removeGlobalFnEvent('pjaxCompleteOnce')
+    document.querySelectorAll('script[data-pjax]').forEach(item => {
+      if (!item.parentNode) return
+      const newScript = document.createElement('script')
+      const content = item.text || item.textContent || ''
+      Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+      newScript.appendChild(document.createTextNode(content))
+      item.parentNode.replaceChild(newScript, item)
+    })
+
+    triggerPjaxFn(window.globalFn.pjaxComplete)
+  })
+
+  document.addEventListener('pjax:error', e => {
+    const responseURL = e.request && e.request.responseURL
+    if (e.request && e.request.status === 404) {
+      true
+        ? pjax.loadUrl('/404')
+        : responseURL && (window.location.href = responseURL)
+    } else if (responseURL) {
+      window.location.href = responseURL
+    }
+  })
+})</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="搜索文章关键词..." type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.7.0"></script></div></div></body></html>
