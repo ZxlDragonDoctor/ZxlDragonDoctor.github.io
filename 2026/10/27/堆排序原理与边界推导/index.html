@@ -1,0 +1,1442 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>为什么堆排序要从 `n/2 - 1` 开始建堆？ | 花独柒</title><meta name="author" content="猪教授"><meta name="copyright" content="猪教授"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="为什么堆排序要从 n&#x2F;2 - 1 开始建堆？ 从一个容易被背下来的公式出发，把堆排序的复杂度、代码骨架、0 基与 1 基的边界差异，以及它和 PriorityQueue 的真实关系一次讲清。  引言「手写一遍堆排序」是后端面试里的常客，而绝大多数人卡在同一个位置：建堆那行循环，起点为什么是 n&#x2F;2 - 1？ 把它背下来并不难，难的是说清它从哪来、为什么不能写成 n&#x2F;2、以及当教材用 1 基数组而实">
+<meta property="og:type" content="article">
+<meta property="og:title" content="为什么堆排序要从 &#96;n&#x2F;2 - 1&#96; 开始建堆？">
+<meta property="og:url" content="https://zxldragondoctor.github.io/2026/10/27/%E5%A0%86%E6%8E%92%E5%BA%8F%E5%8E%9F%E7%90%86%E4%B8%8E%E8%BE%B9%E7%95%8C%E6%8E%A8%E5%AF%BC/">
+<meta property="og:site_name" content="花独柒">
+<meta property="og:description" content="为什么堆排序要从 n&#x2F;2 - 1 开始建堆？ 从一个容易被背下来的公式出发，把堆排序的复杂度、代码骨架、0 基与 1 基的边界差异，以及它和 PriorityQueue 的真实关系一次讲清。  引言「手写一遍堆排序」是后端面试里的常客，而绝大多数人卡在同一个位置：建堆那行循环，起点为什么是 n&#x2F;2 - 1？ 把它背下来并不难，难的是说清它从哪来、为什么不能写成 n&#x2F;2、以及当教材用 1 基数组而实">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://zxldragondoctor.github.io/img/zxl_1.jpg">
+<meta property="article:published_time" content="2026-10-27T02:30:00.000Z">
+<meta property="article:modified_time" content="2026-10-26T18:05:10.779Z">
+<meta property="article:author" content="猪教授">
+<meta property="article:tag" content="堆排序">
+<meta property="article:tag" content="学习笔记">
+<meta property="article:tag" content="数据结构">
+<meta property="article:tag" content="算法">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://zxldragondoctor.github.io/img/total.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "为什么堆排序要从 `n/2 - 1` 开始建堆？",
+  "url": "https://zxldragondoctor.github.io/2026/10/27/%E5%A0%86%E6%8E%92%E5%BA%8F%E5%8E%9F%E7%90%86%E4%B8%8E%E8%BE%B9%E7%95%8C%E6%8E%A8%E5%AF%BC/",
+  "image": "https://zxldragondoctor.github.io/img/zxl_1.jpg",
+  "datePublished": "2026-10-27T02:30:00.000Z",
+  "dateModified": "2026-10-26T18:05:10.779Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "猪教授",
+      "url": "https://github.com/ZxlDragonDoctor"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/netoal.png"><link rel="canonical" href="https://zxldragondoctor.github.io/2026/10/27/%E5%A0%86%E6%8E%92%E5%BA%8F%E5%8E%9F%E7%90%86%E4%B8%8E%E8%BE%B9%E7%95%8C%E6%8E%A8%E5%AF%BC/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="manifest" href="/manifest.json"/><link rel="apple-touch-icon" sizes="180x180" href="/img/netoal.png"/><link rel="icon" type="image/png" sizes="32x32" href="/img/netoal.png"/><link rel="icon" type="image/png" sizes="16x16" href="/img/netoal.png"/><link rel="mask-icon" href="/img/netoal.png" color="#5bbad5"/><link rel="stylesheet" href="/css/index.css?v=5.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.3.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/node-snackbar@0.1.16/dist/snackbar.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        const data = { value }
+
+        if (ttl != null) {
+          data.expiry = Date.now() + ttl * 86400000
+        }
+
+        localStorage.setItem(key, JSON.stringify(data))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return
+
+        try {
+          const data = JSON.parse(itemStr)
+
+          if (data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(key)
+            return
+          }
+
+          return data.value
+        } catch {
+          localStorage.removeItem(key)
+        }
+      }
+    }
+
+    const scriptCache = new Map()
+    const cssCache = new Map()
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => {
+        if (scriptCache.has(url)) {
+          return scriptCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+
+          script.src = url
+          script.async = true
+
+          for (const key in attr) {
+            script.setAttribute(key, attr[key])
+          }
+
+          script.onload = resolve
+          script.onerror = reject
+
+          document.head.appendChild(script)
+        })
+
+        scriptCache.set(url, promise)
+
+        return promise
+      },
+      getCSS: (url, id) => {
+        if (cssCache.has(url)) {
+          return cssCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const link = document.createElement('link')
+
+          link.rel = 'stylesheet'
+          link.href = url
+
+          if (id) {
+            link.id = id
+          }
+
+          link.onload = resolve
+          link.onerror = reject
+
+          document.head.appendChild(link)
+        })
+
+        cssCache.set(url, promise)
+
+        return promise
+      },
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!true && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+      const activateDarkMode = () => {
+        document.documentElement.dataset.theme = 'dark'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.dataset.theme = 'light'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          const mediaQueryDark = window.matchMedia('(prefers-color-scheme: dark)')
+          const mediaQueryLight = window.matchMedia('(prefers-color-scheme: light)')
+
+          if (theme === undefined) {
+            if (mediaQueryLight.matches) activateLightMode()
+            else if (mediaQueryDark.matches) activateDarkMode()
+            else {
+              const hour = new Date().getHours()
+              const start = 6
+              const end = 18
+              const isNight =
+                start < end
+                    ? hour < start || hour >= end
+                    : hour >= start || hour < end
+              isNight ? activateDarkMode() : activateLightMode()
+            }
+            mediaQueryDark.addEventListener('change', e => {
+              if (saveToLocal.get('theme') === undefined) {
+                e.matches ? activateDarkMode() : activateLightMode()
+              }
+            })
+          } else {
+            theme === 'light' ? activateLightMode() : activateDarkMode()
+          }
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":true,"top_n_per_article":1,"unescape":false,"pagination":{"enable":true,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":true,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: {"limitCount":150,"languages":{"author":"作者: 猪教授","link":"链接: ","source":"来源: 花独柒","info":"著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。"}},
+  lightbox: 'fancybox',
+  Snackbar: {"chs_to_cht":"已切换为繁体中文","cht_to_chs":"已切换为简体中文","day_to_night":"已切换为深色模式","night_to_day":"已切换为浅色模式","bgLight":"#49b1f5","bgDark":"#1f1f1f","position":"bottom-left"},
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: true,
+  islazyloadPlugin: true,
+  isAnchor: true,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: true
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '为什么堆排序要从 `n/2 - 1` 开始建堆？',
+  isHighlightShrink: true,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.2"><link rel="alternate" href="/atom.xml" title="花独柒" type="application/atom+xml">
+</head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><script>(()=>{
+  const $loadingBox = document.getElementById('loading-box')
+  const $body = document.body
+  const preloader = {
+    endLoading: () => {
+      if ($loadingBox.classList.contains('loaded')) return
+      $body.style.overflow = ''
+      $loadingBox.classList.add('loaded')
+    },
+    initLoading: () => {
+      $body.style.overflow = 'hidden'
+      $loadingBox.classList.remove('loaded')
+    }
+  }
+
+  preloader.initLoading()
+
+  if (document.readyState === 'complete') {
+    preloader.endLoading()
+  } else {
+    window.addEventListener('load', preloader.endLoading)
+    document.addEventListener('DOMContentLoaded', preloader.endLoading)
+    // Add timeout protection: force end after 7 seconds
+    setTimeout(preloader.endLoading, 7000)
+  }
+
+  if (true) {
+    btf.addGlobalFn('pjaxSend', preloader.initLoading, 'preloader_init')
+    btf.addGlobalFn('pjaxComplete', preloader.endLoading, 'preloader_end')
+  }
+})()</script><div class="bg-animation" id="web_bg" style="background-image: url(/img/wallhaven-1pq9kv.png);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/loading.jpg" data-lazy-src="/img/total.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">85</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">34</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">6</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 博文</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fa fa-archive"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fa fa-folder-open"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 生活</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/shuoshuo/"><i class="fa-fw fa fa-comments-o"></i><span> 分享</span></a></li><li><a class="site-page child" href="/photos/"><i class="fa-fw fa fa-camera-retro"></i><span> 相册</span></a></li><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 影视</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fa fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/comment/"><i class="fa-fw fa fa-paper-plane"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于笔者</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background-image: url(/img/zxl_1.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/loading.jpg" data-lazy-src="/img/netoal.png" alt="Logo"><span class="site-name">花独柒</span></a><a class="nav-page-title" href="/"><span class="site-name">为什么堆排序要从 `n/2 - 1` 开始建堆？</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 博文</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fa fa-archive"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fa fa-folder-open"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 生活</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/shuoshuo/"><i class="fa-fw fa fa-comments-o"></i><span> 分享</span></a></li><li><a class="site-page child" href="/photos/"><i class="fa-fw fa fa-camera-retro"></i><span> 相册</span></a></li><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 影视</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fa fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/comment/"><i class="fa-fw fa fa-paper-plane"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于笔者</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">为什么堆排序要从 `n/2 - 1` 开始建堆？<a class="post-edit-link" href="https://github.com/ZxlDragonDoctor/ZxlDragonDoctor.github.io/edit/main/source/_posts/堆排序原理与边界推导.md" title="编辑" target="_blank"><i class="fas fa-pencil-alt"></i></a></h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-10-27T02:30:00.000Z" title="发表于 2026-10-27 10:30:00">2026-10-27</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-10-26T18:05:10.779Z" title="更新于 2026-10-27 02:05:10">2026-10-27</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0/">算法学习</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">4k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>14分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><div id="post-outdate-notice" data="{&quot;limitDay&quot;:365,&quot;messagePrev&quot;:&quot;本文最后更新于&quot;,&quot;messageNext&quot;:&quot;天前，内容可能已过时，请知悉。&quot;,&quot;postUpdate&quot;:&quot;2026-10-27 02:05:10&quot;}" hidden></div><h1 id="为什么堆排序要从-n-2-1-开始建堆？"><a href="#为什么堆排序要从-n-2-1-开始建堆？" class="headerlink" title="为什么堆排序要从 n/2 - 1 开始建堆？"></a>为什么堆排序要从 <code>n/2 - 1</code> 开始建堆？</h1><blockquote>
+<p>从一个容易被背下来的公式出发，把堆排序的复杂度、代码骨架、0 基与 1 基的边界差异，以及它和 <code>PriorityQueue</code> 的真实关系一次讲清。</p>
+</blockquote>
+<h2 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h2><p>「手写一遍堆排序」是后端面试里的常客，而绝大多数人卡在同一个位置：<strong>建堆那行循环，起点为什么是 <code>n/2 - 1</code>？</strong></p>
+<p>把它背下来并不难，难的是说清它从哪来、为什么不能写成 <code>n/2</code>、以及当教材用 1 基数组而实际代码用 0 基数组时，哪些下标要跟着变。这三个问题一旦想通，堆排序就不再是一个需要记忆的算法，而是<strong>完全二叉树的下标算术 + 一次原地置换</strong>。</p>
+<p>本文按这个顺序展开：先看堆排序在做什么，再推复杂度和建堆起点，然后逐处对齐 0 基与 1 基的边界，最后澄清一个高频误解——<code>PriorityQueue</code> 用了堆，但它不是堆排序。</p>
+<hr>
+<h2 id="一、堆排序只做两件事"><a href="#一、堆排序只做两件事" class="headerlink" title="一、堆排序只做两件事"></a>一、堆排序只做两件事</h2><p>堆排序的全部工作量可以压缩成两个阶段，理解了这个骨架，后面的公式都是它的推论。</p>
+<ol>
+<li><strong>建堆</strong>：把无序数组原地调整成一个大顶堆（或小顶堆）。</li>
+<li><strong>反复取堆顶</strong>：把堆顶（最大值）和当前末尾交换，最大值就归位到数组尾部；然后把有效范围缩短一格，重新调整堆顶。</li>
+</ol>
+<blockquote>
+<p><strong>关键洞察</strong><br>阶段一结束后，堆顶永远是剩余元素里的最大值。<strong>每次交换都让一个元素彻底归位，代价是要让”外来的”堆顶重新下沉一次。</strong></p>
+</blockquote>
+<p>用大顶堆得到的是<strong>升序</strong>结果——这个方向容易记反，理由很直白：<strong>最大值被反复放到数组末尾</strong>，所以小的先留下、大的后到位。要降序就改用小顶堆，把所有比较符号反过来。</p>
+<hr>
+<h2 id="二、时间复杂度：为什么建堆是-O-n-，不是-O-n-log-n"><a href="#二、时间复杂度：为什么建堆是-O-n-，不是-O-n-log-n" class="headerlink" title="二、时间复杂度：为什么建堆是 O(n)，不是 O(n log n)"></a>二、时间复杂度：为什么建堆是 O(n)，不是 O(n log n)</h2><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>时间复杂度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>建堆（heapify）</td>
+<td><strong>O(n)</strong></td>
+<td>从最后一个非叶子节点向前调整</td>
+</tr>
+<tr>
+<td>每次取堆顶并下沉</td>
+<td>O(log n)，共 n−1 次</td>
+<td>堆顶与末尾交换后向下调整</td>
+</tr>
+<tr>
+<td><strong>总计</strong></td>
+<td><strong>O(n log n)</strong></td>
+<td><strong>最好、最坏、平均都是 O(n log n)</strong></td>
+</tr>
+</tbody></table>
+<p>建堆是 O(n) 这一步反直觉，因为”对 n&#x2F;2 个节点各做一次 O(log n) 调整”看起来应该是 O(n log n)。<strong>错在哪：绝大多数节点在树的最底层，它们的下沉距离几乎是 0。</strong></p>
+<p>按层求和就能看清。设根在第 0 层、树高为 h，第 h 层的节点数约为 <code>n / 2^(h+1)</code>，每个节点最多下沉 h 步：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">总代价 ≈ Σ (h · n / 2^(h+1))，h 从 0 到 log n</span><br><span class="line">       = n · Σ h / 2^(h+1)</span><br><span class="line">       = O(n)          // 因为 Σ h/2^h 收敛到 4</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>这是一个级数，不是乘法。</strong> 下沉距离越长，节点数越少，两者相乘后整体收敛。</p>
+</blockquote>
+<h3 id="另外三个必须记住的属性"><a href="#另外三个必须记住的属性" class="headerlink" title="另外三个必须记住的属性"></a>另外三个必须记住的属性</h3><ul>
+<li>**空间 O(1)**：原地排序，只要下沉用循环而不是递归。</li>
+<li><strong>不稳定</strong>：堆顶与末尾的交换会把相同元素的相对顺序打乱。</li>
+<li><strong>最坏仍是 O(n log n)<strong>：不受输入分布影响，</strong>这是堆排序相对快排最大的优势</strong>——快排最坏会退化到 O(n²)。</li>
+</ul>
+<h3 id="与主流排序对照"><a href="#与主流排序对照" class="headerlink" title="与主流排序对照"></a>与主流排序对照</h3><table>
+<thead>
+<tr>
+<th>排序</th>
+<th>平均</th>
+<th>最坏</th>
+<th>空间</th>
+<th>稳定性</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>堆排序</strong></td>
+<td>O(n log n)</td>
+<td><strong>O(n log n)</strong></td>
+<td><strong>O(1)</strong></td>
+<td>不稳定</td>
+</tr>
+<tr>
+<td>快速排序</td>
+<td>O(n log n)</td>
+<td>O(n²)</td>
+<td>O(log n)</td>
+<td>不稳定</td>
+</tr>
+<tr>
+<td>归并排序</td>
+<td>O(n log n)</td>
+<td>O(n log n)</td>
+<td>O(n)</td>
+<td><strong>稳定</strong></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="三、手写实现：0-基原地版"><a href="#三、手写实现：0-基原地版" class="headerlink" title="三、手写实现：0 基原地版"></a>三、手写实现：0 基原地版</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">HeapSort</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">heapSort</span><span class="params">(<span class="type">int</span>[] arr)</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (arr == <span class="literal">null</span> || arr.length &lt;= <span class="number">1</span>) <span class="keyword">return</span>;</span><br><span class="line">        <span class="type">int</span> <span class="variable">n</span> <span class="operator">=</span> arr.length;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 1. 建大顶堆：从最后一个非叶子节点开始向前调整</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> n / <span class="number">2</span> - <span class="number">1</span>; i &gt;= <span class="number">0</span>; i--) &#123;</span><br><span class="line">            siftDown(arr, i, n);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 2. 依次把堆顶（最大值）换到末尾，再对剩余部分调整</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">end</span> <span class="operator">=</span> n - <span class="number">1</span>; end &gt; <span class="number">0</span>; end--) &#123;</span><br><span class="line">            swap(arr, <span class="number">0</span>, end);</span><br><span class="line">            siftDown(arr, <span class="number">0</span>, end);   <span class="comment">// 有效范围 [0, end)</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** 向下调整：把 arr[i] 下沉到合适位置，有效范围 [0, size) */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">siftDown</span><span class="params">(<span class="type">int</span>[] arr, <span class="type">int</span> i, <span class="type">int</span> size)</span> &#123;</span><br><span class="line">        <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">            <span class="type">int</span> <span class="variable">left</span> <span class="operator">=</span> <span class="number">2</span> * i + <span class="number">1</span>;</span><br><span class="line">            <span class="type">int</span> <span class="variable">right</span> <span class="operator">=</span> <span class="number">2</span> * i + <span class="number">2</span>;</span><br><span class="line">            <span class="type">int</span> <span class="variable">largest</span> <span class="operator">=</span> i;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (left &lt; size &amp;&amp; arr[left] &gt; arr[largest])   largest = left;</span><br><span class="line">            <span class="keyword">if</span> (right &lt; size &amp;&amp; arr[right] &gt; arr[largest]) largest = right;</span><br><span class="line">            <span class="keyword">if</span> (largest == i) <span class="keyword">break</span>;</span><br><span class="line"></span><br><span class="line">            swap(arr, i, largest);</span><br><span class="line">            i = largest;   <span class="comment">// 继续下沉，用循环代替递归，省掉栈空间</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">swap</span><span class="params">(<span class="type">int</span>[] arr, <span class="type">int</span> i, <span class="type">int</span> j)</span> &#123;</span><br><span class="line">        <span class="type">int</span> <span class="variable">tmp</span> <span class="operator">=</span> arr[i]; arr[i] = arr[j]; arr[j] = tmp;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        <span class="type">int</span>[] arr = &#123;<span class="number">5</span>, <span class="number">2</span>, <span class="number">9</span>, <span class="number">1</span>, <span class="number">7</span>, <span class="number">3</span>, <span class="number">8</span>, <span class="number">6</span>, <span class="number">4</span>&#125;;</span><br><span class="line">        heapSort(arr);</span><br><span class="line">        System.out.println(java.util.Arrays.toString(arr)); <span class="comment">// [1, 2, 3, 4, 5, 6, 7, 8, 9]</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="五处值得停下来看的细节"><a href="#五处值得停下来看的细节" class="headerlink" title="五处值得停下来看的细节"></a>五处值得停下来看的细节</h3><ul>
+<li><strong>建堆从 <code>n / 2 - 1</code> 递减到 0</strong>，方向必须是从后往前——理由见第四节。</li>
+<li><strong>排序阶段传给 <code>siftDown</code> 的 <code>size</code> 是开区间上界（也就是长度）</strong>，每轮减一，<strong>已经归位的末尾元素不再参与比较</strong>。这是原地排序得以正确的核心：堆的”有效部分”和”已排序部分”共用同一个数组。</li>
+<li><strong>下沉用 <code>while</code> 循环而不是递归</strong>，这样空间才能守住 O(1)。递归版本虽然更短，但会额外吃掉 O(log n) 栈帧。</li>
+<li><strong><code>largest == i</code> 就 break</strong>，这是提前终止：一旦当前节点已不比孩子小，它不会再往下走。</li>
+<li><strong><code>n &lt;= 1</code> 直接返回</strong>，空数组和单元素天然有序，不需要特殊分支。</li>
+</ul>
+<h3 id="用-PriorityQueue-的简化写法（非原地）"><a href="#用-PriorityQueue-的简化写法（非原地）" class="headerlink" title="用 PriorityQueue 的简化写法（非原地）"></a>用 PriorityQueue 的简化写法（非原地）</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="type">int</span>[] heapSortByPQ(<span class="type">int</span>[] arr) &#123;</span><br><span class="line">    java.util.PriorityQueue&lt;Integer&gt; pq = <span class="keyword">new</span> <span class="title class_">java</span>.util.PriorityQueue&lt;&gt;(); <span class="comment">// 默认小顶堆</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> x : arr) pq.offer(x);</span><br><span class="line">    <span class="type">int</span>[] res = <span class="keyword">new</span> <span class="title class_">int</span>[arr.length];</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; res.length; i++) res[i] = pq.poll();</span><br><span class="line">    <span class="keyword">return</span> res;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>时间 O(n log n)、<strong>空间 O(n)<strong>。代码短、不容易写错边界，但多花了线性额外空间，所以它</strong>只是堆排序思想的借用，不是堆排序本身</strong>。手写题推荐上一节的原地版本。</p>
+<hr>
+<h2 id="四、建堆起点-n-2-1-的推导"><a href="#四、建堆起点-n-2-1-的推导" class="headerlink" title="四、建堆起点 n/2 - 1 的推导"></a>四、建堆起点 <code>n/2 - 1</code> 的推导</h2><h3 id="结论先行"><a href="#结论先行" class="headerlink" title="结论先行"></a>结论先行</h3><p><code>n/2 - 1</code> 是<strong>最后一个非叶子节点的下标</strong>（这里的 <code>n/2</code> 是整数除法）。</p>
+<blockquote>
+<p><strong>叶子节点天然满足堆性质，因此不需要调整；而从后往前处理，保证了每次调用 <code>siftDown(i)</code> 时它的两棵子树已经是堆。</strong></p>
+</blockquote>
+<h3 id="推导：从”什么是叶子”反解"><a href="#推导：从”什么是叶子”反解" class="headerlink" title="推导：从”什么是叶子”反解"></a>推导：从”什么是叶子”反解</h3><p>0 基完全二叉树中，节点 <code>i</code> 的左孩子是 <code>2i + 1</code>。节点是叶子 <strong>当且仅当它没有左孩子</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">2i + 1 ≥ n        →  该节点是叶子</span><br><span class="line">2i + 1 &lt; n        →  该节点有孩子，需要调整</span><br><span class="line">   i &lt; (n - 1)/2</span><br></pre></td></tr></table></figure>
+
+<p>所以<strong>需要调整的下标范围是 <code>[0, n/2 - 1]</code>，起点取最大值 <code>n/2 - 1</code>。</strong></p>
+<p>还有第二条更直观的路：**最后一个节点是 <code>n - 1</code>，它的父节点是 <code>(n-1-1)/2 = n/2 - 1</code>**——完全二叉树里最后一个节点的父节点，必然是最靠右、也因此最靠后的那个非叶子节点。两种推导殊途同归。</p>
+<h3 id="一个高频混淆：2i-1、2i-2、n-2-1-各说各的事"><a href="#一个高频混淆：2i-1、2i-2、n-2-1-各说各的事" class="headerlink" title="一个高频混淆：2i+1、2i+2、n/2-1 各说各的事"></a>一个高频混淆：<code>2i+1</code>、<code>2i+2</code>、<code>n/2-1</code> 各说各的事</h3><table>
+<thead>
+<tr>
+<th>式子</th>
+<th>已知什么，求什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>2i + 1</code></td>
+<td>已知父节点 <code>i</code>，求<strong>左孩子</strong>下标</td>
+</tr>
+<tr>
+<td><code>2i + 2</code></td>
+<td>已知父节点 <code>i</code>，求<strong>右孩子</strong>下标</td>
+</tr>
+<tr>
+<td><strong><code>n/2 - 1</code></strong></td>
+<td>已知数组长度 <code>n</code>，求<strong>最后一个非叶子父节点</strong>下标</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>前两个是「父 → 子」，最后一个是「长度 → 起点」。**”最后一个非叶子节点”本身就是父节点，不是它的孩子**，所以这里根本不存在”要不要写成 <code>2i+1</code>“的问题；最后一个非叶子父节点只有一个，唯一确定。</p>
+</blockquote>
+<h3 id="为什么必须从后往前"><a href="#为什么必须从后往前" class="headerlink" title="为什么必须从后往前"></a>为什么必须从后往前</h3><p><code>siftDown(i)</code> 的正确性有一个<strong>前提</strong>：<code>i</code> 的左右子树已经是合法的堆——它只做”我和孩子比，谁大谁上来”的局部决策，无法修复子树内部的破坏。</p>
+<p>从 <code>n/2 - 1</code> 递减到 0 时，处理 <code>i</code> 的那一刻，所有下标大于 <code>i</code> 的节点都已处理完毕，而<strong>孩子下标恒大于父节点下标</strong>，子树必然已成堆。反过来若从 0 往后建堆，孩子还没调整过，父节点比出来的结果下一轮就作废了。</p>
+<h3 id="边界验证（n-8）"><a href="#边界验证（n-8）" class="headerlink" title="边界验证（n &#x3D; 8）"></a>边界验证（n &#x3D; 8）</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">       0</span><br><span class="line">     /   \</span><br><span class="line">    1     2</span><br><span class="line">   / \   / \</span><br><span class="line">  3   4 5   6</span><br><span class="line"> /</span><br><span class="line">7</span><br></pre></td></tr></table></figure>
+
+<p>非叶子节点是 <code>0, 1, 2, 3</code>，最后一个是 **<code>3 = 8/2 - 1</code>**；再看节点 4，它的左孩子 <code>2×4+1 = 9 ≥ 8</code>，确实是叶子。建堆顺序即 <code>3 → 2 → 1 → 0</code>。</p>
+<table>
+<thead>
+<tr>
+<th>n</th>
+<th><code>n/2 - 1</code></th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><strong>-1</strong></td>
+<td>循环一次都不执行，天然正确</td>
+</tr>
+<tr>
+<td>2</td>
+<td>0</td>
+<td>唯一非叶子就是根</td>
+</tr>
+<tr>
+<td>3</td>
+<td>0</td>
+<td>根有孩子 1、2</td>
+</tr>
+<tr>
+<td>4</td>
+<td>1</td>
+<td>节点 1 是最后非叶子（孩子 3）</td>
+</tr>
+<tr>
+<td>8</td>
+<td>3</td>
+<td>节点 3 是最后非叶子（孩子 7）</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p><strong><code>n = 1</code> 时起点算出 <code>-1</code> 是正确行为，不是 Bug</strong>——它让建堆循环自然跳过。这就是为什么代码里 <code>i &gt;= 0</code> 的判据要写成 <code>&gt;= 0</code> 而不是 <code>&gt; 0</code>。</p>
+</blockquote>
+<hr>
+<h2 id="五、0-基与-1-基：一套公式只能配套使用"><a href="#五、0-基与-1-基：一套公式只能配套使用" class="headerlink" title="五、0 基与 1 基：一套公式只能配套使用"></a>五、0 基与 1 基：一套公式只能配套使用</h2><p>很多教材用 1 基数组，因为下标算术更漂亮（孩子就是 <code>2i</code>，父就是 <code>i/2</code>）；而 Java、C 的真实数组是 0 基。<strong>两者的每个公式都要整体平移，混用必错。</strong></p>
+<h3 id="核心公式对照"><a href="#核心公式对照" class="headerlink" title="核心公式对照"></a>核心公式对照</h3><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>0 基（<code>0 ~ n-1</code>）</th>
+<th>1 基（<code>1 ~ n</code>）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>左孩子</td>
+<td><code>2i + 1</code></td>
+<td><code>2i</code></td>
+</tr>
+<tr>
+<td>右孩子</td>
+<td><code>2i + 2</code></td>
+<td><code>2i + 1</code></td>
+</tr>
+<tr>
+<td>父节点</td>
+<td><code>(i - 1) / 2</code></td>
+<td><code>i / 2</code></td>
+</tr>
+<tr>
+<td><strong>最后一个非叶子</strong></td>
+<td><strong><code>n/2 - 1</code></strong></td>
+<td><strong><code>n/2</code></strong></td>
+</tr>
+<tr>
+<td>第一个叶子</td>
+<td><code>n/2</code></td>
+<td><code>n/2 + 1</code></td>
+</tr>
+<tr>
+<td>建堆起点</td>
+<td><code>n/2 - 1</code>，递减到 <code>0</code></td>
+<td><code>n/2</code>，递减到 <code>1</code></td>
+</tr>
+<tr>
+<td>排序交换</td>
+<td><code>swap(0, end)</code>，<code>end</code> 从 <code>n-1</code> 到 <code>1</code></td>
+<td><code>swap(1, end)</code>，<code>end</code> 从 <code>n</code> 到 <code>2</code></td>
+</tr>
+<tr>
+<td><strong>调整范围语义</strong></td>
+<td><code>[0, size)</code>，size 是<strong>有效长度</strong></td>
+<td><code>[1, size]</code>，size 是<strong>有效最大下标</strong></td>
+</tr>
+</tbody></table>
+<h3 id="两段骨架并排看"><a href="#两段骨架并排看" class="headerlink" title="两段骨架并排看"></a>两段骨架并排看</h3><p><strong>0 基：</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> n/<span class="number">2</span> - <span class="number">1</span>; i &gt;= <span class="number">0</span>; i--) siftDown(arr, i, n);</span><br><span class="line"><span class="keyword">for</span> (<span class="type">int</span> <span class="variable">end</span> <span class="operator">=</span> n - <span class="number">1</span>; end &gt; <span class="number">0</span>; end--) &#123;</span><br><span class="line">    swap(arr, <span class="number">0</span>, end);</span><br><span class="line">    siftDown(arr, <span class="number">0</span>, end);      <span class="comment">// 开区间上界</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// siftDown 内：left &lt; size &amp;&amp; right &lt; size</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>1 基：</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> n/<span class="number">2</span>; i &gt;= <span class="number">1</span>; i--) siftDown(arr, i, n);</span><br><span class="line"><span class="keyword">for</span> (<span class="type">int</span> <span class="variable">end</span> <span class="operator">=</span> n; end &gt; <span class="number">1</span>; end--) &#123;</span><br><span class="line">    swap(arr, <span class="number">1</span>, end);</span><br><span class="line">    siftDown(arr, <span class="number">1</span>, end - <span class="number">1</span>);  <span class="comment">// 闭区间上界</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// siftDown 内：left &lt;= size &amp;&amp; right &lt;= size</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="三处最容易踩的边界"><a href="#三处最容易踩的边界" class="headerlink" title="三处最容易踩的边界"></a>三处最容易踩的边界</h3><ol>
+<li><strong>建堆起点差一位。</strong> 0 基是 <code>n/2-1</code> 配 <code>i&gt;=0</code>；1 基是 <code>n/2</code> 配 <code>i&gt;=1</code>。<strong>1 基写成 <code>n/2-1</code> 会漏掉最后一个非叶子节点，是有害错误；0 基写成 <code>n/2</code> 只是多调整了一个叶子，无害但多余。</strong> 这一正一反值得留意：<strong>同一个”差一位”，在不同基下严重程度完全不同。</strong></li>
+<li><strong>排序循环的终止条件。</strong> 0 基 <code>end &gt; 0</code>，1 基 <code>end &gt; 1</code>。两者语义一致：<strong>剩最后一个元素时就停下</strong>，因为单元素天然有序，再多交换一次反而会把顺序弄乱。</li>
+<li><strong><code>siftDown</code> 的 size 语义。</strong> 0 基传<strong>长度</strong>（开区间），1 基传<strong>最大下标</strong>（闭区间）。把两边的传参方式搞混，要么数组越界，要么漏掉一个元素没参与比较。**建议在方法注释里写死”size 是长度还是最大下标”**，这是堆排序代码里最典型的隐性 Bug 来源。</li>
+</ol>
+<h3 id="完整对照示例（n-8）"><a href="#完整对照示例（n-8）" class="headerlink" title="完整对照示例（n &#x3D; 8）"></a>完整对照示例（n &#x3D; 8）</h3><table>
+<thead>
+<tr>
+<th></th>
+<th>0 基</th>
+<th>1 基</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>下标范围</td>
+<td><code>0..7</code></td>
+<td><code>1..8</code></td>
+</tr>
+<tr>
+<td>非叶子节点</td>
+<td><code>0,1,2,3</code></td>
+<td><code>1,2,3,4</code></td>
+</tr>
+<tr>
+<td>最后非叶子</td>
+<td><code>3 = 8/2 - 1</code></td>
+<td><code>4 = 8/2</code></td>
+</tr>
+<tr>
+<td>建堆顺序</td>
+<td><code>3,2,1,0</code></td>
+<td><code>4,3,2,1</code></td>
+</tr>
+<tr>
+<td>排序 end 取值</td>
+<td><code>7,6,...,1</code></td>
+<td><code>8,7,...,2</code></td>
+</tr>
+</tbody></table>
+<blockquote>
+<p><strong>两者的非叶子节点个数都是 4，只是下标整体平移了 1。</strong> 这句话可以用来快速自检：如果你的实现算出的非叶子数量和 <code>⌊n/2⌋</code> 不一致，那一定是边界写错了。</p>
+</blockquote>
+<p>实际工程里 Java 数组从 0 开始，<strong>优先写 0 基版本</strong>；1 基主要出现在教材伪代码和树状数组、线段树那类刻意节省心智的场景里。</p>
+<hr>
+<h2 id="六、PriorityQueue-和堆排序是什么关系"><a href="#六、PriorityQueue-和堆排序是什么关系" class="headerlink" title="六、PriorityQueue 和堆排序是什么关系"></a>六、<code>PriorityQueue</code> 和堆排序是什么关系</h2><blockquote>
+<p><strong>准确说法</strong>：<code>PriorityQueue</code> 的底层用<strong>二叉堆</strong>实现；堆排序是<strong>利用堆这个结构完成的排序算法</strong>。两者共享数据结构，但目标根本不同。</p>
+</blockquote>
+<h3 id="PriorityQueue-确实是个堆"><a href="#PriorityQueue-确实是个堆" class="headerlink" title="PriorityQueue 确实是个堆"></a><code>PriorityQueue</code> 确实是个堆</h3><ul>
+<li>OpenJDK 源码注释明确写着：内部表示为<strong>平衡二叉堆（binary heap）</strong>，用数组存储。</li>
+<li>默认<strong>小顶堆</strong>，<code>queue[0]</code> 恒为最小值；传入 <code>Comparator</code> 可以改成大顶堆。</li>
+<li><code>offer</code>：插到数组末尾 + 上浮，**O(log n)**。</li>
+<li><code>poll</code>：取出堆顶，把末尾元素搬到堆顶 + 下沉，**O(log n)**。</li>
+<li>它没有维护整体顺序，<strong>迭代器的遍历顺序是无序的</strong>——这是最常被误判的一点。</li>
+</ul>
+<h3 id="关键区别"><a href="#关键区别" class="headerlink" title="关键区别"></a>关键区别</h3><table>
+<thead>
+<tr>
+<th></th>
+<th>PriorityQueue</th>
+<th>堆排序</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>身份</td>
+<td><strong>容器 &#x2F; 数据结构</strong></td>
+<td><strong>排序算法</strong></td>
+</tr>
+<tr>
+<td>适用场景</td>
+<td><strong>动态</strong>添加、随时取最值</td>
+<td>对<strong>给定的静态数组</strong>就地排序</td>
+</tr>
+<tr>
+<td>顺序保证</td>
+<td><strong>只保证队首最优</strong>，遍历无序</td>
+<td>最终整体有序</td>
+</tr>
+<tr>
+<td>空间</td>
+<td>O(n)</td>
+<td><strong>O(1) 原地</strong></td>
+</tr>
+<tr>
+<td>核心操作</td>
+<td>offer &#x2F; poll</td>
+<td>build-heap + 反复取堆顶下沉</td>
+</tr>
+</tbody></table>
+<p><strong>一个类比</strong>：<code>PriorityQueue</code> 是一只”永远把最重要的文件压在最上面”的文件架，你可以随时往里塞、随时抽最上面那份；堆排序则是”一次性把一堆乱文件按重要性彻底整理好”的那个过程。文件架只管顶部，整理完的档案柜才保证全序。</p>
+<p>所以<strong>不能说 <code>PriorityQueue</code> 就是堆排序</strong>，只能说它们<strong>同源</strong>。第三节里那段基于 <code>PriorityQueue</code> 的实现是合法用法，但它在空间复杂度上已经不是堆排序了。</p>
+<hr>
+<h2 id="七、小结"><a href="#七、小结" class="headerlink" title="七、小结"></a>七、小结</h2><p>堆排序值得留下的不是那段代码，而是四条能横向迁移的认知：</p>
+<ol>
+<li><strong>一切公式都能从”完全二叉树的下标算术”推出来。</strong> <code>n/2 - 1</code>、<code>2i+1</code>、<code>(i-1)/2</code> 都不需要背，用”叶子 ⇔ 没有左孩子 ⇔ <code>2i+1 ≥ n</code>“当场反解即可。</li>
+<li><strong>“从后往前”不是技巧而是前提。</strong> <code>siftDown</code> 只能做局部决策，它依赖子树已经成堆——这个依赖关系决定了遍历方向。凡是分治式的自底向上调整，都要先问一句”我的孩子处理好了吗”。</li>
+<li><strong>复杂度的惊喜藏在求和里。</strong> 建堆 O(n) 而不是 O(n log n)，原因下沉距离与节点数呈指数级反向关系。<strong>看到”对每个节点做一次 O(log n) 操作”就断言总代价 O(n log n)，是算法分析里最常见的懒惰推理。</strong></li>
+<li><strong>基（0 基 &#x2F; 1 基）是一个契约，不是一行偏移。</strong> 起点、终止条件、size 的开闭区间必须成套替换；混用时最危险的是**”1 基写成 0 基起点”会静默漏掉一个节点**，而不是立刻抛异常。</li>
+</ol>
+<p>顺带澄清一句常被混谈的关系：**<code>PriorityQueue</code> 提供了堆这个数据结构，堆排序提供了用它完成排序的算法**，二者同源而不同义。</p>
+<hr>
+<h2 id="附录：速查卡"><a href="#附录：速查卡" class="headerlink" title="附录：速查卡"></a>附录：速查卡</h2><h3 id="公式"><a href="#公式" class="headerlink" title="公式"></a>公式</h3><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>0 基</th>
+<th>1 基</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>左孩子</td>
+<td><code>2i+1</code></td>
+<td><code>2i</code></td>
+</tr>
+<tr>
+<td>右孩子</td>
+<td><code>2i+2</code></td>
+<td><code>2i+1</code></td>
+</tr>
+<tr>
+<td>父节点</td>
+<td><code>(i-1)/2</code></td>
+<td><code>i/2</code></td>
+</tr>
+<tr>
+<td>最后非叶子</td>
+<td><strong><code>n/2-1</code></strong></td>
+<td><strong><code>n/2</code></strong></td>
+</tr>
+<tr>
+<td>建堆起点</td>
+<td><code>n/2-1</code></td>
+<td><code>n/2</code></td>
+</tr>
+<tr>
+<td>排序终止</td>
+<td><code>end &gt; 0</code></td>
+<td><code>end &gt; 1</code></td>
+</tr>
+<tr>
+<td>size 语义</td>
+<td><strong>长度（开区间）</strong></td>
+<td><strong>最大下标（闭区间）</strong></td>
+</tr>
+</tbody></table>
+<h3 id="复杂度"><a href="#复杂度" class="headerlink" title="复杂度"></a>复杂度</h3><table>
+<thead>
+<tr>
+<th>操作</th>
+<th>时间</th>
+<th>空间</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>建堆</td>
+<td><strong>O(n)</strong></td>
+<td>O(1)</td>
+</tr>
+<tr>
+<td>堆排序总计</td>
+<td><strong>O(n log n)</strong></td>
+<td><strong>O(1)</strong></td>
+</tr>
+<tr>
+<td><code>PriorityQueue</code> offer &#x2F; poll</td>
+<td>O(log n)</td>
+<td>O(n)</td>
+</tr>
+</tbody></table>
+<h3 id="记忆卡"><a href="#记忆卡" class="headerlink" title="记忆卡"></a>记忆卡</h3><blockquote>
+<p><strong>建堆 <code>n/2-1</code> 起，从后往前保证子树成堆；大顶堆出升序，小顶堆出降序；0 基与 1 基的公式成套换，size 开闭区间要统一；<code>PriorityQueue</code> 是堆做的容器，不是堆排序。</strong></p>
+</blockquote>
+<h3 id="自检清单"><a href="#自检清单" class="headerlink" title="自检清单"></a>自检清单</h3><ul>
+<li><code>n = 1、2、3、8</code> 四个边界各手写跑一遍，尤其确认 <code>n=1</code> 时循环是否自然跳过。</li>
+<li>0 基与 1 基各实现一遍，<strong>对比两者的 <code>siftDown</code> 判据（<code>&lt;</code> 还是 <code>&lt;=</code>）</strong>。</li>
+<li>数一下你的实现调整了几个节点，答案应该正好是 <code>⌊n/2⌋</code>。</li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a target="_blank" rel="noopener" href="https://github.com/ZxlDragonDoctor">猪教授</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://zxldragondoctor.github.io/2026/10/27/%E5%A0%86%E6%8E%92%E5%BA%8F%E5%8E%9F%E7%90%86%E4%B8%8E%E8%BE%B9%E7%95%8C%E6%8E%A8%E5%AF%BC/">https://zxldragondoctor.github.io/2026/10/27/%E5%A0%86%E6%8E%92%E5%BA%8F%E5%8E%9F%E7%90%86%E4%B8%8E%E8%BE%B9%E7%95%8C%E6%8E%A8%E5%AF%BC/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://ZxlDragonDoctor.github.io" target="_blank">花独柒</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E7%AE%97%E6%B3%95/">算法</a><a class="post-meta__tags" href="/tags/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">学习笔记</a><a class="post-meta__tags" href="/tags/%E5%A0%86%E6%8E%92%E5%BA%8F/">堆排序</a><a class="post-meta__tags" href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">数据结构</a></div><div class="post-share"><div class="social-share" data-image="/img/zxl_1.jpg" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/10/27/%E8%AE%A2%E5%8D%95%E7%B3%BB%E7%BB%9F%E9%AB%98%E5%B3%B0%E6%9C%9F%E6%95%85%E9%9A%9C%E5%88%86%E6%9E%90-%E9%9D%A2%E8%AF%95%E9%A2%98/" title="为什么上午 9 点下单正常，下午 6 点就「服务器繁忙」？"><img class="cover" src="/img/loading.jpg" data-lazy-src="/img/zxl_3.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">为什么上午 9 点下单正常，下午 6 点就「服务器繁忙」？</div></div><div class="info-2"><div class="info-item-1">为什么上午 9 点下单正常，下午 6 点就「服务器繁忙」？ 一次典型的线上故障分析：从「同一份代码，不同表现」出发，把可能的原因按层拆开。  引言假设你在维护一个订单系统。上午 9 点，一切正常；到了下午 6 点，用户开始看到「服务器繁忙，请稍后再试」。代码没有改动，配置没有发版，唯一的变量是时间。 这类问题在真实生产中出现的频率远高于我们的想象，而它恰好是性能与稳定性领域一个非常好的思考样本——因为它强迫你先回答一个问题：时间到底改变了什么？  核心判断答案只有两类：负载变了，或者某些随时间累积、以及被时间触发的资源状态变了。整篇文章就围绕这两条线索展开。   一、在猜原因之前，先做二分大多数人在这个问题上的第一反应是罗列十条可能性。但更有效的方式是先问三个问题，把搜索空间砍掉一大半。 1. 是所有用户都失败，还是只有部分用户失败？ 全量失败指向共享资源：数据库、缓存、网关、出口带宽，或者一个正在抢占资源的批处理任务。 部分失败指向局部：某个热点商品的行锁、某个分片、某一台实例。  这两类的排查路径完全不同，先分清楚能省下大量时间。 2. 上午 9 点真的是低峰吗？如果 9 点...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/10/15/%E6%89%93%E5%AE%B6%E5%8A%AB%E8%88%8D1%E5%88%B03%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="打家劫舍1到3学习笔记"><img class="cover" src="/img/loading.jpg" data-lazy-src="/img/zxl_5.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-15</div><div class="info-item-2">打家劫舍1到3学习笔记</div></div><div class="info-2"><div class="info-item-1">打家劫舍 I、II、III：从线性 DP 到树形 DP打家劫舍系列的共同限制是：不能同时选择相邻的房屋。每道题的结构不同，状态定义也随之变化：  I：房屋排成一条直线，用一维动态规划解决。 II：房屋首尾相邻形成一个环，把问题拆成两个线性范围。 III：房屋组成二叉树，对每个节点分别计算“偷”和“不偷”两种状态。  对应力扣题目 198. 打家劫舍（House Robber） 213. 打家劫舍 II（House Robber II） 337. 打家劫舍 III（House Robber III）   一、共同思路：对每间房作“偷或不偷”的选择处理当前房屋时有两种选择：  不偷当前房屋：答案沿用前面房屋能得到的最大金额。 偷当前房屋：不能偷相邻房屋，所以金额要加上“上上间房屋之前”的最优结果。  线性排列下的基本递推关系是： 1dp[i] = max(dp[i - 1], dp[i - 2] + nums[i])  三道题的区别在于房屋之间的相邻关系：I 是直线，II 多了首尾相邻，III 则需要根据树上的父子关系判断能否同时选择。  二、打家劫舍 I：房屋排成直线题目特点房屋沿...</div></div></div></a><a class="pagination-related" href="/2026/10/15/SortColors%E5%BC%82%E6%88%96%E4%BA%A4%E6%8D%A2%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="SortColors异或交换学习笔记"><img class="cover" src="/img/loading.jpg" data-lazy-src="/img/zxl_2.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-15</div><div class="info-item-2">SortColors异或交换学习笔记</div></div><div class="info-2"><div class="info-item-1">Sort Colors：四种分区写法与异或交换本文围绕 LeetCode 75「颜色分类」，整理四种原地排序写法（两轮分区、三指针荷兰国旗、p0&#x2F;p1 双指针单次扫描、p0&#x2F;p2 两端收缩），并在其中把交换操作改为异或交换。重点是理解：异或交换为什么可行、为什么下标相同时必须跳过，以及按位与和按位或为什么不能代替异或来交换。 对应力扣题目75. 颜色分类（Sort Colors） 题目给定一个只包含 0、1、2 的数组，要求原地排序，使相同颜色相邻，顺序为 0、1、2。 例如： 12输入：[2, 0, 2, 1, 1, 0]输出：[0, 0, 1, 1, 2, 2]   一、异或交换原理设两个不同位置上的值分别是 a 和 b。异或交换通过三次异或，先把两个值合并编码，再逐步恢复： 123nums[i] ^= nums[j];nums[j] ^= nums[i];nums[i] ^= nums[j];  推导过程： 12345初始：nums[i] = a，nums[j] = b第 1 步：nums[i] = a ^ b第 2 步：nums[j] = b ^ (a...</div></div></div></a><a class="pagination-related" href="/2026/10/15/%E6%9C%80%E5%A4%A7%E4%B9%98%E7%A7%AF%E5%AD%90%E6%95%B0%E7%BB%84%E4%B8%89%E7%A7%8D%E5%86%99%E6%B3%95%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="最大乘积子数组三种写法学习笔记"><img class="cover" src="/img/loading.jpg" data-lazy-src="/img/zxl_8.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-15</div><div class="info-item-2">最大乘积子数组三种写法学习笔记</div></div><div class="info-2"><div class="info-item-1">最大乘积子数组的三种写法：回溯、动态规划与滚动变量「最大乘积」看起来只是在数组里找一个乘积最大的范围，但负数和零会让问题变得特别一些。本文从最初的回溯代码出发，再介绍完整动态规划和滚动变量优化，重点讲清楚每种写法解决什么问题。 本文按三种思路展开：  回溯枚举任意子集：理解最初代码为什么不适用于连续子数组。 动态规划数组：用 maxF 和 minF 记录每个位置的状态。 滚动变量：只保留上一位置的状态，将空间降到 O(1)。  对应力扣题目152. 乘积最大子数组（Maximum Product Subarray）  一、先明确题目：子数组必须连续以常见的「最大乘积子数组」问题为例，给定一个整数数组，要求找出一个非空连续子数组，使子数组中的元素乘积最大。 例如： 123输入：[2, 3, -2, 4]答案：6说明：连续子数组 [2, 3] 的乘积是 6。  “连续”是关键。对于 [2, 3, -2, 4]，不能跳过 -2 再把 2、3、4 组合起来，因为它们不是原数组中的连续一段。  二、写法一：回溯代码实际枚举的是任意子集最初的回溯代码在做两件事：对每个元素尝试选或不选；并且先...</div></div></div></a><a class="pagination-related" href="/2026/10/15/287-%E5%AF%BB%E6%89%BE%E9%87%8D%E5%A4%8D%E6%95%B0%E4%B8%89%E7%A7%8D%E8%A7%A3%E6%B3%95%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/" title="287-寻找重复数三种解法学习记录"><img class="cover" src="/img/loading.jpg" data-lazy-src="/img/zxl_8.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-15</div><div class="info-item-2">287-寻找重复数三种解法学习记录</div></div><div class="info-2"><div class="info-item-1">LeetCode 287：寻找重复数——三种解法学习记录 题目：287. 寻找重复数官方题解：寻找重复数  一、题目条件给定长度为 n + 1 的数组 nums，其中每个数字都在 [1, n] 范围内。恰好有一个不同的数字重复出现，重复次数至少为两次；其余数字最多出现一次。要求：  返回重复的数字； 不修改数组； 额外空间为 O(1)。  这里的“一个重复数字”指只有一个数值重复，但它可以出现两次、三次或更多次。 12nums = [1, 3, 4, 2, 2]重复数字是 2  二、先看懂题目为什么有重复数数组有 n + 1 个位置，但可选的数字只有 n 种：1, 2, ..., n。因此至少有一个数字要被使用不止一次。这是抽屉原理。 例如有 5 个格子，却只有 4 种数字可填，至少有一种数字会重复。 三、方法一：值域二分查找1. 二分的不是数组下标数组没有排序，所以不能在数组下标上做普通二分。这里二分的是答案可能的范围 [1, n]。 选一个 mid，统计数组中有多少个数满足 nums[i] &lt;= mid，记为 count：  count &gt; mid：重复数在 [1...</div></div></div></a><a class="pagination-related" href="/2026/09/23/%E5%8D%8E%E4%B8%BAOD%E7%AE%97%E6%B3%95%E9%A2%98%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/" title="华为OD算法题学习记录"><img class="cover" src="/img/loading.jpg" data-lazy-src="/img/zxl_3.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-23</div><div class="info-item-2">华为OD算法题学习记录</div></div><div class="info-2"><div class="info-item-1">算法题学习记录覆盖本场对话中的 7 道题：题意要点、解法模板、自己代码里踩过的坑、以及通用注意事项。  一、电网负载均衡（连通块 &#x2F; BFS &#x2F; 并查集）题意：N 个节点有负载，M 条无向边。同一连通块为一个供电区。不均衡度 &#x3D;（最大负载 − 最小负载）× 节点数。输出所有供电区中的最大值；无有效供电区（节点数 &lt; 2）输出 -1。 解法：  BFS&#x2F;DFS：按未访问点枚举连通块，块内统计 max &#x2F; min &#x2F; size。 并查集：union 时在根上合并 size / max / min，最后扫根。  踩过的坑：    坑 现象 正确做法    把无向图当有向图 只扫 g[j][0]==t，边写成 [2,1] 时从 1 找不到 2 邻接表两端都加边   无解输出错误 全是孤立点时打印 Integer.MIN_VALUE 无有效区时输出 -1   样例掩盖 bug [[0,1],[1,2],[3,4]] 恰好是小→大，单向 BFS 也能过 必须造反向边反例   注意：  两条件写法：(max-min)*size，...</div></div></div></a><a class="pagination-related" href="/2026/10/15/%E6%9C%80%E7%9F%AD%E6%97%A0%E5%BA%8F%E8%BF%9E%E7%BB%AD%E5%AD%90%E6%95%B0%E7%BB%84%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="最短无序连续子数组学习笔记"><img class="cover" src="/img/loading.jpg" data-lazy-src="/img/zxl_7.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-15</div><div class="info-item-2">最短无序连续子数组学习笔记</div></div><div class="info-2"><div class="info-item-1">最短无序连续子数组：排序对比与线性扫描这道题的关键，是找出数组中最短的一段连续区间：只要把这段区间排好序，整个数组就会有序。本文从排序后对比的直观方法出发，再介绍两种线性时间的边界查找方法。 对应力扣题目581. 最短无序连续子数组（Shortest Unsorted Continuous Subarray） 题目要求返回需要排序的最短连续子数组长度。如果数组已经有序，返回 0。 例如： 123输入：[2, 6, 4, 8, 10, 9, 15]输出：5说明：排序子数组 [6, 4, 8, 10, 9] 后，整个数组变为有序。   一、方法一：复制后排序，再比较不同位置先复制原数组并排序。排序后的数组是整个数组最终应该呈现的样子。找到原数组与排序结果最左边和最右边不同的位置，这两个位置之间就是需要排序的区间。 Java 实现1234567891011121314151617181920212223242526import java.util.Arrays;class Solution &#123;    public int findUnsortedSubarray(int[] ...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="waline-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/loading.jpg" data-lazy-src="/img/total.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">猪教授</div><div class="author-info-description">纸上谈来终觉浅，绝知此事要躬行</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">85</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">34</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">6</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/ZxlDragonDoctor"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/ZxlDragonDoctor" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">欢迎来到花独柒的博客，记录生活，分享美好。</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%A0%86%E6%8E%92%E5%BA%8F%E8%A6%81%E4%BB%8E-n-2-1-%E5%BC%80%E5%A7%8B%E5%BB%BA%E5%A0%86%EF%BC%9F"><span class="toc-number">1.</span> <span class="toc-text">为什么堆排序要从 n&#x2F;2 - 1 开始建堆？</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BC%95%E8%A8%80"><span class="toc-number">1.1.</span> <span class="toc-text">引言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%A0%86%E6%8E%92%E5%BA%8F%E5%8F%AA%E5%81%9A%E4%B8%A4%E4%BB%B6%E4%BA%8B"><span class="toc-number">1.2.</span> <span class="toc-text">一、堆排序只做两件事</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BB%BA%E5%A0%86%E6%98%AF-O-n-%EF%BC%8C%E4%B8%8D%E6%98%AF-O-n-log-n"><span class="toc-number">1.3.</span> <span class="toc-text">二、时间复杂度：为什么建堆是 O(n)，不是 O(n log n)</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%A6%E5%A4%96%E4%B8%89%E4%B8%AA%E5%BF%85%E9%A1%BB%E8%AE%B0%E4%BD%8F%E7%9A%84%E5%B1%9E%E6%80%A7"><span class="toc-number">1.3.1.</span> <span class="toc-text">另外三个必须记住的属性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8E%E4%B8%BB%E6%B5%81%E6%8E%92%E5%BA%8F%E5%AF%B9%E7%85%A7"><span class="toc-number">1.3.2.</span> <span class="toc-text">与主流排序对照</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E6%89%8B%E5%86%99%E5%AE%9E%E7%8E%B0%EF%BC%9A0-%E5%9F%BA%E5%8E%9F%E5%9C%B0%E7%89%88"><span class="toc-number">1.4.</span> <span class="toc-text">三、手写实现：0 基原地版</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%94%E5%A4%84%E5%80%BC%E5%BE%97%E5%81%9C%E4%B8%8B%E6%9D%A5%E7%9C%8B%E7%9A%84%E7%BB%86%E8%8A%82"><span class="toc-number">1.4.1.</span> <span class="toc-text">五处值得停下来看的细节</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%94%A8-PriorityQueue-%E7%9A%84%E7%AE%80%E5%8C%96%E5%86%99%E6%B3%95%EF%BC%88%E9%9D%9E%E5%8E%9F%E5%9C%B0%EF%BC%89"><span class="toc-number">1.4.2.</span> <span class="toc-text">用 PriorityQueue 的简化写法（非原地）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%BB%BA%E5%A0%86%E8%B5%B7%E7%82%B9-n-2-1-%E7%9A%84%E6%8E%A8%E5%AF%BC"><span class="toc-number">1.5.</span> <span class="toc-text">四、建堆起点 n&#x2F;2 - 1 的推导</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%93%E8%AE%BA%E5%85%88%E8%A1%8C"><span class="toc-number">1.5.1.</span> <span class="toc-text">结论先行</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8E%A8%E5%AF%BC%EF%BC%9A%E4%BB%8E%E2%80%9D%E4%BB%80%E4%B9%88%E6%98%AF%E5%8F%B6%E5%AD%90%E2%80%9D%E5%8F%8D%E8%A7%A3"><span class="toc-number">1.5.2.</span> <span class="toc-text">推导：从”什么是叶子”反解</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E4%B8%AA%E9%AB%98%E9%A2%91%E6%B7%B7%E6%B7%86%EF%BC%9A2i-1%E3%80%812i-2%E3%80%81n-2-1-%E5%90%84%E8%AF%B4%E5%90%84%E7%9A%84%E4%BA%8B"><span class="toc-number">1.5.3.</span> <span class="toc-text">一个高频混淆：2i+1、2i+2、n&#x2F;2-1 各说各的事</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BF%85%E9%A1%BB%E4%BB%8E%E5%90%8E%E5%BE%80%E5%89%8D"><span class="toc-number">1.5.4.</span> <span class="toc-text">为什么必须从后往前</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BE%B9%E7%95%8C%E9%AA%8C%E8%AF%81%EF%BC%88n-8%EF%BC%89"><span class="toc-number">1.5.5.</span> <span class="toc-text">边界验证（n &#x3D; 8）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%810-%E5%9F%BA%E4%B8%8E-1-%E5%9F%BA%EF%BC%9A%E4%B8%80%E5%A5%97%E5%85%AC%E5%BC%8F%E5%8F%AA%E8%83%BD%E9%85%8D%E5%A5%97%E4%BD%BF%E7%94%A8"><span class="toc-number">1.6.</span> <span class="toc-text">五、0 基与 1 基：一套公式只能配套使用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%85%AC%E5%BC%8F%E5%AF%B9%E7%85%A7"><span class="toc-number">1.6.1.</span> <span class="toc-text">核心公式对照</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%A4%E6%AE%B5%E9%AA%A8%E6%9E%B6%E5%B9%B6%E6%8E%92%E7%9C%8B"><span class="toc-number">1.6.2.</span> <span class="toc-text">两段骨架并排看</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E5%A4%84%E6%9C%80%E5%AE%B9%E6%98%93%E8%B8%A9%E7%9A%84%E8%BE%B9%E7%95%8C"><span class="toc-number">1.6.3.</span> <span class="toc-text">三处最容易踩的边界</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%8C%E6%95%B4%E5%AF%B9%E7%85%A7%E7%A4%BA%E4%BE%8B%EF%BC%88n-8%EF%BC%89"><span class="toc-number">1.6.4.</span> <span class="toc-text">完整对照示例（n &#x3D; 8）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81PriorityQueue-%E5%92%8C%E5%A0%86%E6%8E%92%E5%BA%8F%E6%98%AF%E4%BB%80%E4%B9%88%E5%85%B3%E7%B3%BB"><span class="toc-number">1.7.</span> <span class="toc-text">六、PriorityQueue 和堆排序是什么关系</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#PriorityQueue-%E7%A1%AE%E5%AE%9E%E6%98%AF%E4%B8%AA%E5%A0%86"><span class="toc-number">1.7.1.</span> <span class="toc-text">PriorityQueue 确实是个堆</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E5%8C%BA%E5%88%AB"><span class="toc-number">1.7.2.</span> <span class="toc-text">关键区别</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E5%B0%8F%E7%BB%93"><span class="toc-number">1.8.</span> <span class="toc-text">七、小结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%99%84%E5%BD%95%EF%BC%9A%E9%80%9F%E6%9F%A5%E5%8D%A1"><span class="toc-number">1.9.</span> <span class="toc-text">附录：速查卡</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%AC%E5%BC%8F"><span class="toc-number">1.9.1.</span> <span class="toc-text">公式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A4%8D%E6%9D%82%E5%BA%A6"><span class="toc-number">1.9.2.</span> <span class="toc-text">复杂度</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%B0%E5%BF%86%E5%8D%A1"><span class="toc-number">1.9.3.</span> <span class="toc-text">记忆卡</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%87%AA%E6%A3%80%E6%B8%85%E5%8D%95"><span class="toc-number">1.9.4.</span> <span class="toc-text">自检清单</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/10/27/%E5%A0%86%E6%8E%92%E5%BA%8F%E5%8E%9F%E7%90%86%E4%B8%8E%E8%BE%B9%E7%95%8C%E6%8E%A8%E5%AF%BC/" title="为什么堆排序要从 `n/2 - 1` 开始建堆？"><img src="/img/loading.jpg" data-lazy-src="/img/zxl_1.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="为什么堆排序要从 `n/2 - 1` 开始建堆？"/></a><div class="content"><a class="title" href="/2026/10/27/%E5%A0%86%E6%8E%92%E5%BA%8F%E5%8E%9F%E7%90%86%E4%B8%8E%E8%BE%B9%E7%95%8C%E6%8E%A8%E5%AF%BC/" title="为什么堆排序要从 `n/2 - 1` 开始建堆？">为什么堆排序要从 `n/2 - 1` 开始建堆？</a><time datetime="2026-10-27T02:30:00.000Z" title="发表于 2026-10-27 10:30:00">2026-10-27</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/10/27/%E8%AE%A2%E5%8D%95%E7%B3%BB%E7%BB%9F%E9%AB%98%E5%B3%B0%E6%9C%9F%E6%95%85%E9%9A%9C%E5%88%86%E6%9E%90-%E9%9D%A2%E8%AF%95%E9%A2%98/" title="为什么上午 9 点下单正常，下午 6 点就「服务器繁忙」？"><img src="/img/loading.jpg" data-lazy-src="/img/zxl_3.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="为什么上午 9 点下单正常，下午 6 点就「服务器繁忙」？"/></a><div class="content"><a class="title" href="/2026/10/27/%E8%AE%A2%E5%8D%95%E7%B3%BB%E7%BB%9F%E9%AB%98%E5%B3%B0%E6%9C%9F%E6%95%85%E9%9A%9C%E5%88%86%E6%9E%90-%E9%9D%A2%E8%AF%95%E9%A2%98/" title="为什么上午 9 点下单正常，下午 6 点就「服务器繁忙」？">为什么上午 9 点下单正常，下午 6 点就「服务器繁忙」？</a><time datetime="2026-10-27T02:00:00.000Z" title="发表于 2026-10-27 10:00:00">2026-10-27</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/10/15/287-%E5%AF%BB%E6%89%BE%E9%87%8D%E5%A4%8D%E6%95%B0%E4%B8%89%E7%A7%8D%E8%A7%A3%E6%B3%95%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/" title="287-寻找重复数三种解法学习记录"><img src="/img/loading.jpg" data-lazy-src="/img/zxl_8.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="287-寻找重复数三种解法学习记录"/></a><div class="content"><a class="title" href="/2026/10/15/287-%E5%AF%BB%E6%89%BE%E9%87%8D%E5%A4%8D%E6%95%B0%E4%B8%89%E7%A7%8D%E8%A7%A3%E6%B3%95%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/" title="287-寻找重复数三种解法学习记录">287-寻找重复数三种解法学习记录</a><time datetime="2026-10-15T11:10:00.000Z" title="发表于 2026-10-15 19:10:00">2026-10-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/10/15/%E6%89%93%E5%AE%B6%E5%8A%AB%E8%88%8D1%E5%88%B03%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="打家劫舍1到3学习笔记"><img src="/img/loading.jpg" data-lazy-src="/img/zxl_5.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="打家劫舍1到3学习笔记"/></a><div class="content"><a class="title" href="/2026/10/15/%E6%89%93%E5%AE%B6%E5%8A%AB%E8%88%8D1%E5%88%B03%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="打家劫舍1到3学习笔记">打家劫舍1到3学习笔记</a><time datetime="2026-10-15T11:00:00.000Z" title="发表于 2026-10-15 19:00:00">2026-10-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/10/15/SortColors%E5%BC%82%E6%88%96%E4%BA%A4%E6%8D%A2%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="SortColors异或交换学习笔记"><img src="/img/loading.jpg" data-lazy-src="/img/zxl_2.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="SortColors异或交换学习笔记"/></a><div class="content"><a class="title" href="/2026/10/15/SortColors%E5%BC%82%E6%88%96%E4%BA%A4%E6%8D%A2%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="SortColors异或交换学习笔记">SortColors异或交换学习笔记</a><time datetime="2026-10-15T10:40:00.000Z" title="发表于 2026-10-15 18:40:00">2026-10-15</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/wallhaven-gp8pdq.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2023 - 2026 By 猪教授</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.7.0</a></span></div><div class="footer_custom_text">纸上谈来终觉浅，绝知此事要躬行</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.7.0"></script><script src="/js/main.js?v=5.7.0"></script><script src="/js/tw_cn.js?v=5.7.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page@5.2.0/instantpage.min.js" type="module"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.iife.min.js"></script><script src="https://cdn.jsdelivr.net/npm/node-snackbar@0.1.16/dist/snackbar.min.js"></script><div class="js-pjax"><script>(() => {
+  const changeScriptToMath = article => {
+    article.querySelectorAll('script[type^="math/tex"]').forEach(el => {
+      const display = /mode=display/.test(el.type)
+      const node = document.createElement(display ? 'div' : 'span')
+      node.textContent = display
+        ? `$$${el.textContent}$$`
+        : `$${el.textContent}$`
+      el.parentNode.replaceChild(node, el)
+    })
+  }
+
+  const loadMathjax = () => {
+    const article = document.getElementById('article-container')
+    if (!article || article.querySelector('.hbe-container')) return
+    changeScriptToMath(article)
+
+    if (!window.MathJax) {
+      window.MathJax = {
+        loader: {
+          load: [
+            // Four font extension packages (optional)
+            //- '[tex]/bbm',
+            //- '[tex]/bboldx',
+            //- '[tex]/dsfont',
+            '[tex]/mhchem',
+            'ui/lazy'
+          ],
+          paths: {
+            'mathjax-newcm': '[mathjax]/../@mathjax/mathjax-newcm-font',
+
+            //- // Four font extension packages (optional)
+            //- 'mathjax-bbm-extension': '[mathjax]/../@mathjax/mathjax-bbm-font-extension',
+            //- 'mathjax-bboldx-extension': '[mathjax]/../@mathjax/mathjax-bboldx-font-extension',
+            //- 'mathjax-dsfont-extension': '[mathjax]/../@mathjax/mathjax-dsfont-font-extension',
+            'mathjax-mhchem-extension': '[mathjax]/../@mathjax/mathjax-mhchem-font-extension'
+          }
+        },
+        output: {
+          font: 'mathjax-newcm',
+        },
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          tags: 'ams',
+          packages: {
+            '[+]': [
+              'mhchem'
+            ]
+          }
+        },
+        chtml: {
+          scale: 1.1
+        },
+        options: {
+          lazyMargin: '200px',
+          enableMenu: true,
+          menuOptions: {
+            settings: {
+              enrich: false  // Turn off Braille and voice narration text automatic generation
+            }
+          },
+        }
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.min.js'
+      script.id = 'MathJax-script'
+      script.async = true
+      document.head.appendChild(script)
+    } else {
+      MathJax.typesetClear()
+      MathJax.typesetPromise([ article ])
+    }
+  }
+
+  btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+  window.pjax ? loadMathjax() : window.addEventListener('load', loadMathjax)
+})()</script><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.innerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+
+    setTimeout(() => URL.revokeObjectURL(url), 5000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    // Clean up previous event listeners and pending frames
+    if (wrap.__mermaidAbortController) {
+      wrap.__mermaidAbortController.abort()
+      if (wrap.__mermaidRafId) cancelAnimationFrame(wrap.__mermaidRafId)
+    }
+    const ac = new AbortController()
+    wrap.__mermaidAbortController = ac
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+    // Disable default gestures to prevent scroll chaining and pinch-zoom penetration in Chrome
+    svg.style.touchAction = 'none'
+
+    // Cache BoundingClientRect, throttled on scroll to reduce reflow
+    let cachedRect = svg.getBoundingClientRect()
+    let rectDirty = false
+    const markRectDirty = () => { rectDirty = true }
+    window.addEventListener('resize', markRectDirty, { signal: ac.signal })
+    window.addEventListener('scroll', markRectDirty, { signal: ac.signal, capture: true })
+    const getRect = () => {
+      if (rectDirty) {
+        cachedRect = svg.getBoundingClientRect()
+        rectDirty = false
+      }
+      return cachedRect
+    }
+
+    // Precompute clamp bounds from initial viewBox
+    const minW = initVb[2] * 0.1
+    const maxW = initVb[2] * 10
+    const minH = initVb[3] * 0.1
+    const maxH = initVb[3] * 10
+    const clampVb = vb => {
+      const out = vb.slice()
+      out[2] = clamp(out[2], minW, maxW)
+      out[3] = clamp(out[3], minH, maxH)
+      return out
+    }
+
+    // Throttle DOM updates using requestAnimationFrame
+    let pendingVb = null
+    let rafId = null
+    const applyVb = () => {
+      if (pendingVb) {
+        wrap.__mermaidCurViewBox = pendingVb
+        setSvgViewBox(svg, pendingVb)
+        pendingVb = null
+      }
+      rafId = null
+      wrap.__mermaidRafId = null
+    }
+    const setCurVb = vb => {
+      pendingVb = clampVb(vb)
+      if (!rafId) {
+        rafId = requestAnimationFrame(applyVb)
+        wrap.__mermaidRafId = rafId
+      }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      lastPointerX: 0,
+      lastPointerY: 0
+    }
+
+    const onPointerDown = e => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      const curVb = wrap.__mermaidCurViewBox
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+      if (state.pointers.size === 1) {
+        state.startVb = curVb.slice()
+        state.lastPointerX = e.clientX
+        state.lastPointerY = e.clientY
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = curVb.slice()
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+      const curVb = wrap.__mermaidCurViewBox
+      const rect = getRect()
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = state.pointers.values().next().value
+        const dxClient = p.x - state.lastPointerX
+        const dyClient = p.y - state.lastPointerY
+        state.lastPointerX = p.x
+        state.lastPointerY = p.y
+        const dx = dxClient * (curVb[2] / rect.width)
+        const dy = dyClient * (curVb[3] / rect.height)
+        setCurVb([curVb[0] - dx, curVb[1] - dy, curVb[2], curVb[3]])
+        return
+      }
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const px = curVb[0] + (cx - rect.left) * (curVb[2] / rect.width)
+        const py = curVb[1] + (cy - rect.top) * (curVb[3] / rect.height)
+        setCurVb(zoomAtPoint(state.startVb, factor, px, py))
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      // Release PointerCapture to avoid event capture anomalies
+      if (svg.hasPointerCapture && svg.hasPointerCapture(e.pointerId)) {
+        svg.releasePointerCapture(e.pointerId)
+      }
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+      } else if (state.pointers.size === 1) {
+        const p = state.pointers.values().next().value
+        state.lastPointerX = p.x
+        state.lastPointerY = p.y
+      }
+    }
+
+    const onWheel = e => {
+      // Prevent event bubbling from triggering external scroll
+      e.preventDefault()
+      e.stopPropagation()
+      // Normalize deltaY across deltaMode (Chrome uses pixels, Safari uses lines)
+      let delta = e.deltaY
+      if (e.deltaMode === 1) delta *= 16
+      else if (e.deltaMode === 2) delta *= 400
+
+      // Continuous zoom factor: smoother than fixed 1.1/0.9 steps
+      const zoomFactor = Math.pow(1.001, delta)
+
+      const curVb = wrap.__mermaidCurViewBox
+      const rect = getRect()
+      const px = curVb[0] + (e.clientX - rect.left) * (curVb[2] / rect.width)
+      const py = curVb[1] + (e.clientY - rect.top) * (curVb[3] / rect.height)
+      setCurVb(zoomAtPoint(curVb, zoomFactor, px, py))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (init) setCurVb(init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown, { signal: ac.signal })
+    svg.addEventListener('pointermove', onPointerMove, { signal: ac.signal })
+    svg.addEventListener('pointerup', onPointerUpOrCancel, { signal: ac.signal })
+    svg.addEventListener('pointercancel', onPointerUpOrCancel, { signal: ac.signal })
+    svg.addEventListener('wheel', onWheel, { passive: false, signal: ac.signal })
+    svg.addEventListener('dblclick', onDblClick, { signal: ac.signal })
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      // Clean up event listeners before removing old SVG
+      if (item.__mermaidAbortController) {
+        item.__mermaidAbortController.abort()
+      }
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      let config = {}
+      try {
+        config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      } catch (e) {
+        console.warn('[mermaid] failed to parse dataset.config:', e)
+      }
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+      const handleError = err => {
+        console.error(`[mermaid] render failed for block #${index}:`, err)
+        const errorEl = document.createElement('div')
+        errorEl.className = 'mermaid-error'
+        errorEl.textContent = `Mermaid render error: ${err.message || err}`
+        mermaidSrc.insertAdjacentElement('afterend', errorEl)
+      }
+
+      try {
+        const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+        // mermaid v9 and v10 compatibility
+        if (typeof renderFn === 'string') {
+          renderMermaid(renderFn)
+        } else {
+          renderFn.then(({ svg }) => renderMermaid(svg)).catch(handleError)
+        }
+      } catch (err) {
+        handleError(err)
+      }
+    })
+  }
+
+  const codeToMermaid = $article => {
+    const codeMermaidEle = $article.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    const $article = document.getElementById('article-container')
+    if (!$article) return
+
+    if (true) codeToMermaid($article)
+    const $mermaid = $article.querySelectorAll('.mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script><script>(() => {
+  const applyThemeDefaultsConfig = theme => {
+    if (theme === 'dark-mode') {
+      Chart.defaults.color = "rgba(255, 255, 255, 0.8)"
+      Chart.defaults.borderColor = "rgba(255, 255, 255, 0.2)"
+      Chart.defaults.scale.ticks.backdropColor = "transparent"
+    } else {
+      Chart.defaults.color = "rgba(0, 0, 0, 0.8)"
+      Chart.defaults.borderColor = "rgba(0, 0, 0, 0.1)"
+      Chart.defaults.scale.ticks.backdropColor = "transparent"
+    }
+  }
+
+  // Recursively traverse the config object and automatically apply theme-specific color schemes
+  const applyThemeConfig = (obj, theme) => {
+    if (typeof obj !== 'object' || obj === null) return
+
+    Object.keys(obj).forEach(key => {
+      const value = obj[key]
+      // If the property is an object and has theme-specific options, apply them
+      if (typeof value === 'object' && value !== null) {
+        if (value[theme]) {
+          obj[key] = value[theme] // Apply the value for the current theme
+        } else {
+          // Recursively process child objects
+          applyThemeConfig(value, theme)
+        }
+      }
+    })
+  }
+
+  const runChartJS = ele => {
+    window.loadChartJS = true
+
+    Array.from(ele).forEach((item, index) => {
+      const chartSrc = item.firstElementChild
+      const chartID = item.getAttribute('data-chartjs-id') || ('chartjs-' + index) // Use custom ID or default ID
+      const width = item.getAttribute('data-width')
+      const existingCanvas = document.getElementById(chartID)
+
+      // If a canvas already exists, remove it to avoid rendering duplicates
+      if (existingCanvas) {
+          existingCanvas.parentNode.remove()
+      }
+
+      const chartDefinition = chartSrc.textContent
+      const canvas = document.createElement('canvas')
+      canvas.id = chartID
+
+      const div = document.createElement('div')
+      div.className = 'chartjs-wrap'
+
+      if (width) {
+        div.style.width = width
+      }
+
+      div.appendChild(canvas)
+      chartSrc.insertAdjacentElement('afterend', div)
+
+      const ctx = document.getElementById(chartID).getContext('2d')
+
+      const config = JSON.parse(chartDefinition)
+
+      const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark-mode' : 'light-mode'
+
+      // Set default styles (initial setup)
+      applyThemeDefaultsConfig(theme)
+
+      // Automatically traverse the config and apply dual-mode color schemes
+      applyThemeConfig(config, theme)
+
+      new Chart(ctx, config)
+    })
+  }
+
+  const loadChartJS = () => {
+    const chartJSEle = document.querySelectorAll('#article-container .chartjs-container')
+    if (chartJSEle.length === 0) return
+
+    window.loadChartJS ? runChartJS(chartJSEle) : btf.getScript('https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js').then(() => runChartJS(chartJSEle))
+  }
+
+  // Listen for theme change events
+  btf.addGlobalFn('themeChange', loadChartJS, 'chartjs')
+  btf.addGlobalFn('encrypt', loadChartJS, 'chartjs')
+
+  window.pjax ? loadChartJS() : document.addEventListener('DOMContentLoaded', loadChartJS)
+})()</script><script>(() => {
+  const abcjsInit = () => {
+    const abcjsFn = () => {
+      const $article = document.getElementById("article-container")
+      if (!$article || $article.querySelector(".hbe-container")) return
+
+      setTimeout(() => {
+        const sheets = $article.querySelectorAll(".abc-music-sheet")
+        for (let i = 0; i < sheets.length; i++) {
+          const ele = sheets[i]
+          if (ele.children.length > 0) continue
+
+          // Parse parameters from data-params attribute
+          let params = {}
+          const dp = ele.getAttribute("data-params")
+          if (dp) {
+            try {
+              params = JSON.parse(dp)
+            } catch (e) {
+              console.error("Failed to parse data-params:", e)
+            }
+          }
+
+          // Merge parsed parameters with the responsive option
+          // Ensures params content appears before responsive
+          const options = { ...params, responsive: "resize" }
+
+          // Render the music score using ABCJS.renderAbc
+          ABCJS.renderAbc(ele, ele.textContent, options)
+        }
+      }, 100)
+    }
+
+    if (typeof ABCJS === "object" && ABCJS !== null) {
+      abcjsFn()
+    } else {
+      btf.getScript("https://cdn.jsdelivr.net/npm/abcjs@6.6.4/dist/abcjs-basic-min.min.js").then(abcjsFn)
+    }
+  }
+
+  if (window.pjax) {
+    abcjsInit()
+  } else {
+    window.addEventListener("load", abcjsInit)
+  }
+
+  btf.addGlobalFn("encrypt", abcjsInit, "abcjs")
+})()</script><script>(() => {
+  let initFn = window.walineFn || null
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = {"locale":{"placeholder":"欢迎留下你的评论哦~"}}
+
+  const destroyWaline = ele => ele.destroy()
+
+  const initWaline = (Fn, el = document, path = window.location.pathname) => {
+    const waline = Fn({
+      el: el.querySelector('#waline-wrap'),
+      serverURL: 'https://waline-qzmr.vercel.app/',
+      pageview: false,
+      dark: 'html[data-theme="dark"]',
+      comment: false,
+      ...option,
+      path: isShuoshuo ? path : (option && option.path) || path
+    })
+
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyWaline = () => {
+        destroyWaline(waline)
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+  }
+
+  const loadWaline = (el, path) => {
+    if (initFn) initWaline(initFn, el, path)
+    else {
+      btf.getCSS('https://cdn.jsdelivr.net/npm/@waline/client@3.15.2/dist/waline.min.css')
+        .then(() => import('https://cdn.jsdelivr.net/npm/@waline/client@3.15.2/dist/waline.min.js'))
+        .then(({ init }) => {
+          initFn = init || Waline.init
+          initWaline(initFn, el, path)
+          window.walineFn = initFn
+        })
+    }
+  }
+
+  if (isShuoshuo) {
+    'Waline' === 'Waline'
+      ? window.shuoshuoComment = { loadComment: loadWaline } 
+      : window.loadOtherComment = loadWaline
+    return
+  }
+
+  if ('Waline' === 'Waline' || !true) {
+    if (true) btf.loadComment(document.getElementById('waline-wrap'),loadWaline)
+    else setTimeout(loadWaline, 0)
+  } else {
+    window.loadOtherComment = loadWaline
+  }
+})()</script></div><script>window.newestComments = {
+  changeContent: content => {
+    if (content === '') return content
+
+    content = content.replace(/<img.*?src="(.*?)"?[^\>]+>/ig, '[图片]') // replace image link
+    content = content.replace(/<a[^>]+?href=["']?([^"']+)["']?[^>]*>([^<]+)<\/a>/gi, '[链接]') // replace url
+    content = content.replace(/<pre><code>.*?<\/pre>/gi, '[代码]') // replace code
+    content = content.replace(/<code>.*?<\/code>/gi, '[代码]') // replace code
+    content = content.replace(/<[^>]+>/g, "") // remove html tag
+
+    if (content.length > 150) {
+      content = content.substring(0, 150) + '...'
+    }
+    return content
+  },
+
+  generateHtml: (array, ele) => {
+    let result = ''
+
+    if (array.length) {
+      for (let i = 0; i < array.length; i++) {
+        result += '<div class="aside-list-item">'
+
+        if (true && array[i].avatar) {
+          const imgAttr = 'data-lazy-src'
+          const lazyloadNative = ''
+          result += `<a href="${array[i].url}" class="thumbnail"><img ${imgAttr}="${array[i].avatar}" alt="${array[i].nick}" ${lazyloadNative}></a>`
+        }
+
+        result += `<div class="content">
+        <a class="comment" href="${array[i].url}" title="${array[i].content}">${array[i].content}</a>
+        <div class="name"><span>${array[i].nick} / </span><time datetime="${array[i].date}">${btf.diffDate(array[i].date, true)}</time></div>
+        </div></div>`
+      }
+    } else {
+      result += '暂无评论'
+    }
+
+    ele.innerHTML = result
+    window.lazyLoadInstance && window.lazyLoadInstance.update()
+    window.pjax && window.pjax.refresh(ele)
+  },
+
+  newestCommentInit: (name, getComment) => {
+    const $dom = document.querySelector('#card-newest-comments .aside-list')
+    if ($dom) {
+      const data = btf.saveToLocal.get(name)
+      if (data) {
+        newestComments.generateHtml(JSON.parse(data), $dom)
+      } else {
+        getComment($dom)
+      }
+    }
+  },
+
+  run: (name, getComment) => {
+    newestComments.newestCommentInit(name, getComment)
+    btf.addGlobalFn('pjaxComplete', () => newestComments.newestCommentInit(name, getComment), name)
+  }
+}</script><script>window.addEventListener('load', () => {
+  const keyName = 'waline-newest-comments'
+  const { changeContent, generateHtml, run } = window.newestComments
+
+  const getComment = async (ele) => {
+    try {
+      const res = await fetch('https://waline-qzmr.vercel.app/api/comment?type=recent&count=6')
+      const result = await res.json()
+      const walineArray = result.data.map(e => {
+        return {
+          'content': changeContent(e.comment),
+          'avatar': e.avatar,
+          'nick': e.nick,
+          'url': e.url + '#' + e.objectId,
+          'date': e.time || e.insertedAt
+        }
+      })
+      btf.saveToLocal.set(keyName, JSON.stringify(walineArray), 10/(60*24))
+      generateHtml(walineArray, ele)
+    } catch (err) {
+      console.error(err)
+      ele.textContent= "无法获取评论，请确认相关配置是否正确"
+    }
+  }
+
+  run(keyName, getComment)
+})</script><canvas class="fireworks" mobile="false"></canvas><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/fireworks.min.js"></script><script defer="defer" id="ribbon" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/canvas-ribbon.min.js" size="150" alpha="0.6" zIndex="-1" mobile="false" data-click="false"></script><script defer="defer" id="fluttering_ribbon" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/canvas-fluttering-ribbon.min.js"></script><script id="canvas_nest" defer="defer" color="135,180,240" opacity="0.7" zIndex="-1" count="99" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/canvas-nest.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = false;
+document.body.addEventListener('input', POWERMODE);
+</script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/click-heart.min.js" async="async" mobile="false"></script><script id="click-show-text" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/click-show-text.min.js" data-mobile="false" data-text="努力,加油,奋斗" data-fontsize="15px" data-random="false" async="async"></script><script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.min.js" defer="defer"></script><script>document.addEventListener('DOMContentLoaded', () => {
+  const pjaxSelectors = ["head > title","#config-diff","#body-wrap","#rightside-config-hide","#rightside-config-show",".js-pjax"]
+
+  window.pjax = new Pjax({
+    elements: 'a:not([target="_blank"]):not([data-fancybox])',
+    selectors: pjaxSelectors,
+    cacheBust: false,
+    analytics: false,
+    scrollRestoration: false
+  })
+
+  const triggerPjaxFn = (val) => {
+    if (!val) return
+    Object.values(val).forEach(fn => {
+      try {
+        fn()
+      } catch (err) {
+        console.debug('Pjax callback failed:', err)
+      }
+    })
+  }
+
+  document.addEventListener('pjax:send', () => {
+    // removeEventListener
+    btf.removeGlobalFnEvent('pjaxSendOnce')
+    btf.removeGlobalFnEvent('themeChange')
+
+    // reset readmode
+    const $bodyClassList = document.body.classList
+    if ($bodyClassList.contains('read-mode')) $bodyClassList.remove('read-mode')
+
+    triggerPjaxFn(window.globalFn.pjaxSend)
+  })
+
+  document.addEventListener('pjax:complete', () => {
+    btf.removeGlobalFnEvent('pjaxCompleteOnce')
+    document.querySelectorAll('script[data-pjax]').forEach(item => {
+      if (!item.parentNode) return
+      const newScript = document.createElement('script')
+      const content = item.text || item.textContent || ''
+      Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+      newScript.appendChild(document.createTextNode(content))
+      item.parentNode.replaceChild(newScript, item)
+    })
+
+    triggerPjaxFn(window.globalFn.pjaxComplete)
+  })
+
+  document.addEventListener('pjax:error', e => {
+    const responseURL = e.request && e.request.responseURL
+    if (e.request && e.request.status === 404) {
+      true
+        ? pjax.loadUrl('/404')
+        : responseURL && (window.location.href = responseURL)
+    } else if (responseURL) {
+      window.location.href = responseURL
+    }
+  })
+})</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="搜索文章关键词..." type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.7.0"></script></div></div></body></html>
