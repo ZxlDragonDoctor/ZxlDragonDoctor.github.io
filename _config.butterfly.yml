@@ -736,6 +736,10 @@ inject:
     - <style>.bsz-unavailable{opacity:.55;font-size:.9em}</style>
   bottom:
     # - <script src="xxxx"></script>
+    # 计数服务：官方 busuanzi.ibruce.info 已失效、busuanzi.cc 禁用超长域名，
+    # 改用 soxft/busuanzi 公共实例（免注册、同源 API 协议）。data-prefix 对齐
+    # Butterfly 的 busuanzi_value_* 元素 id；pjax 是脚本自带的翻页重计属性。
+    - <script src="https://busuanzi.9420.ltd/js" data-prefix="busuanzi_value" pjax></script>
     - <script data-pjax src="/js/busuanzi-fallback.js"></script>
 
 # CDN Settings
@@ -745,3 +749,7 @@ CDN:
   version: true
   custom_format:
   option:
+    # 主题在 busuanzi 任一开关为 true 时会无条件插入 asset.busuanzi 脚本，
+    # 而 asset 是主题由 CDN 配置重建的（scripts/events/cdn.js），只能在这里覆盖。
+    # 官方 busuanzi.ibruce.info 已失效，指向本地空文件，真正的计数脚本见 inject.bottom。
+    busuanzi: /js/bsz-off.js
