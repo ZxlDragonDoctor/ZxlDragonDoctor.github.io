@@ -385,7 +385,8 @@ comments:
   # 申请地址: https://waline.js.org/
   use: Waline
   text: true
-  lazyload: true
+  # lazyload 会把 Waline 的 pageview 强制关掉并延迟到评论区可见才初始化，阅读量统计必须为 false
+  lazyload: false
   count: true
   card_post_count: true
 
@@ -421,7 +422,7 @@ valine:
 waline:
   serverURL: https://waline-qzmr.vercel.app/
   bg:
-  pageview: false
+  pageview: true
   option:
     locale:
       placeholder: 欢迎留下你的评论哦~
