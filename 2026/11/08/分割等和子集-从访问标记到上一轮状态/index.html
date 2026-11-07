@@ -1,0 +1,1505 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>分割等和子集：从访问标记到上一轮状态 | 花独柒</title><meta name="author" content="猪教授"><meta name="copyright" content="猪教授"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="分割等和子集：从访问标记到上一轮状态题目与参考链接 力扣题目：416. 分割等和子集  本文以“分割等和子集”为例，介绍 0&#x2F;1 背包的状态定义、状态转移和空间优化，重点比较复制数组后的正序更新与原地倒序更新，并分析全局访问标记的局限。  适用条件：nums 是非空正整数数组，总和可以安全存入 Java 的 int。本文讨论的是每个数组位置最多选一次的 0&#x2F;1 背包问题。  一">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分割等和子集：从访问标记到上一轮状态">
+<meta property="og:url" content="https://zxldragondoctor.github.io/2026/11/08/%E5%88%86%E5%89%B2%E7%AD%89%E5%92%8C%E5%AD%90%E9%9B%86-%E4%BB%8E%E8%AE%BF%E9%97%AE%E6%A0%87%E8%AE%B0%E5%88%B0%E4%B8%8A%E4%B8%80%E8%BD%AE%E7%8A%B6%E6%80%81/">
+<meta property="og:site_name" content="花独柒">
+<meta property="og:description" content="分割等和子集：从访问标记到上一轮状态题目与参考链接 力扣题目：416. 分割等和子集  本文以“分割等和子集”为例，介绍 0&#x2F;1 背包的状态定义、状态转移和空间优化，重点比较复制数组后的正序更新与原地倒序更新，并分析全局访问标记的局限。  适用条件：nums 是非空正整数数组，总和可以安全存入 Java 的 int。本文讨论的是每个数组位置最多选一次的 0&#x2F;1 背包问题。  一">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://zxldragondoctor.github.io/img/zxl_7.png">
+<meta property="article:published_time" content="2026-11-07T18:00:00.000Z">
+<meta property="article:modified_time" content="2026-11-07T19:00:28.312Z">
+<meta property="article:author" content="猪教授">
+<meta property="article:tag" content="0-1背包">
+<meta property="article:tag" content="LeetCode">
+<meta property="article:tag" content="动态规划">
+<meta property="article:tag" content="算法">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://zxldragondoctor.github.io/img/total.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "分割等和子集：从访问标记到上一轮状态",
+  "url": "https://zxldragondoctor.github.io/2026/11/08/%E5%88%86%E5%89%B2%E7%AD%89%E5%92%8C%E5%AD%90%E9%9B%86-%E4%BB%8E%E8%AE%BF%E9%97%AE%E6%A0%87%E8%AE%B0%E5%88%B0%E4%B8%8A%E4%B8%80%E8%BD%AE%E7%8A%B6%E6%80%81/",
+  "image": "https://zxldragondoctor.github.io/img/zxl_7.png",
+  "datePublished": "2026-11-07T18:00:00.000Z",
+  "dateModified": "2026-11-07T19:00:28.312Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "猪教授",
+      "url": "https://github.com/ZxlDragonDoctor"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/netoal.png"><link rel="canonical" href="https://zxldragondoctor.github.io/2026/11/08/%E5%88%86%E5%89%B2%E7%AD%89%E5%92%8C%E5%AD%90%E9%9B%86-%E4%BB%8E%E8%AE%BF%E9%97%AE%E6%A0%87%E8%AE%B0%E5%88%B0%E4%B8%8A%E4%B8%80%E8%BD%AE%E7%8A%B6%E6%80%81/"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="manifest" href="/manifest.json"/><link rel="apple-touch-icon" sizes="180x180" href="/img/netoal.png"/><link rel="icon" type="image/png" sizes="32x32" href="/img/netoal.png"/><link rel="icon" type="image/png" sizes="16x16" href="/img/netoal.png"/><link rel="mask-icon" href="/img/netoal.png" color="#5bbad5"/><link rel="stylesheet" href="/css/index.css?v=5.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.3.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/node-snackbar@0.1.16/dist/snackbar.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        const data = { value }
+
+        if (ttl != null) {
+          data.expiry = Date.now() + ttl * 86400000
+        }
+
+        localStorage.setItem(key, JSON.stringify(data))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return
+
+        try {
+          const data = JSON.parse(itemStr)
+
+          if (data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(key)
+            return
+          }
+
+          return data.value
+        } catch {
+          localStorage.removeItem(key)
+        }
+      }
+    }
+
+    const scriptCache = new Map()
+    const cssCache = new Map()
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => {
+        if (scriptCache.has(url)) {
+          return scriptCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+
+          script.src = url
+          script.async = true
+
+          for (const key in attr) {
+            script.setAttribute(key, attr[key])
+          }
+
+          script.onload = resolve
+          script.onerror = reject
+
+          document.head.appendChild(script)
+        })
+
+        scriptCache.set(url, promise)
+
+        return promise
+      },
+      getCSS: (url, id) => {
+        if (cssCache.has(url)) {
+          return cssCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const link = document.createElement('link')
+
+          link.rel = 'stylesheet'
+          link.href = url
+
+          if (id) {
+            link.id = id
+          }
+
+          link.onload = resolve
+          link.onerror = reject
+
+          document.head.appendChild(link)
+        })
+
+        cssCache.set(url, promise)
+
+        return promise
+      },
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!true && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+      const activateDarkMode = () => {
+        document.documentElement.dataset.theme = 'dark'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.dataset.theme = 'light'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', 'ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          const mediaQueryDark = window.matchMedia('(prefers-color-scheme: dark)')
+          const mediaQueryLight = window.matchMedia('(prefers-color-scheme: light)')
+
+          if (theme === undefined) {
+            if (mediaQueryLight.matches) activateLightMode()
+            else if (mediaQueryDark.matches) activateDarkMode()
+            else {
+              const hour = new Date().getHours()
+              const start = 6
+              const end = 18
+              const isNight =
+                start < end
+                    ? hour < start || hour >= end
+                    : hour >= start || hour < end
+              isNight ? activateDarkMode() : activateLightMode()
+            }
+            mediaQueryDark.addEventListener('change', e => {
+              if (saveToLocal.get('theme') === undefined) {
+                e.matches ? activateDarkMode() : activateLightMode()
+              }
+            })
+          } else {
+            theme === 'light' ? activateLightMode() : activateDarkMode()
+          }
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":true,"top_n_per_article":1,"unescape":false,"pagination":{"enable":true,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":true,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: {"limitCount":150,"languages":{"author":"作者: 猪教授","link":"链接: ","source":"来源: 花独柒","info":"著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。"}},
+  lightbox: 'fancybox',
+  Snackbar: {"chs_to_cht":"已切换为繁体中文","cht_to_chs":"已切换为简体中文","day_to_night":"已切换为深色模式","night_to_day":"已切换为浅色模式","bgLight":"#49b1f5","bgDark":"#1f1f1f","position":"bottom-left"},
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: true,
+  islazyloadPlugin: true,
+  isAnchor: true,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: true
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '分割等和子集：从访问标记到上一轮状态',
+  isHighlightShrink: true,
+  isToc: true,
+  pageType: 'post'
+}</script><style>.bsz-unavailable{opacity:.55;font-size:.9em}</style><meta name="generator" content="Hexo 8.1.2"><link rel="alternate" href="/atom.xml" title="花独柒" type="application/atom+xml">
+</head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><script>(()=>{
+  const $loadingBox = document.getElementById('loading-box')
+  const $body = document.body
+  const preloader = {
+    endLoading: () => {
+      if ($loadingBox.classList.contains('loaded')) return
+      $body.style.overflow = ''
+      $loadingBox.classList.add('loaded')
+    },
+    initLoading: () => {
+      $body.style.overflow = 'hidden'
+      $loadingBox.classList.remove('loaded')
+    }
+  }
+
+  preloader.initLoading()
+
+  if (document.readyState === 'complete') {
+    preloader.endLoading()
+  } else {
+    window.addEventListener('load', preloader.endLoading)
+    document.addEventListener('DOMContentLoaded', preloader.endLoading)
+    // Add timeout protection: force end after 7 seconds
+    setTimeout(preloader.endLoading, 7000)
+  }
+
+  if (true) {
+    btf.addGlobalFn('pjaxSend', preloader.initLoading, 'preloader_init')
+    btf.addGlobalFn('pjaxComplete', preloader.endLoading, 'preloader_end')
+  }
+})()</script><div class="bg-animation" id="web_bg" style="background-image: url(/img/wallhaven-1pq9kv.png);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/loading.jpg" data-lazy-src="/img/total.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">86</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">36</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">6</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 博文</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fa fa-archive"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fa fa-folder-open"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 生活</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/shuoshuo/"><i class="fa-fw fa fa-comments-o"></i><span> 分享</span></a></li><li><a class="site-page child" href="/photos/"><i class="fa-fw fa fa-camera-retro"></i><span> 相册</span></a></li><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 影视</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fa fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/comment/"><i class="fa-fw fa fa-paper-plane"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于笔者</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background-image: url(/img/zxl_7.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/loading.jpg" data-lazy-src="/img/netoal.png" alt="Logo"><span class="site-name">花独柒</span></a><a class="nav-page-title" href="/"><span class="site-name">分割等和子集：从访问标记到上一轮状态</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 博文</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fa fa-archive"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fa fa-folder-open"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 生活</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/shuoshuo/"><i class="fa-fw fa fa-comments-o"></i><span> 分享</span></a></li><li><a class="site-page child" href="/photos/"><i class="fa-fw fa fa-camera-retro"></i><span> 相册</span></a></li><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 影视</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fa fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/comment/"><i class="fa-fw fa fa-paper-plane"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于笔者</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">分割等和子集：从访问标记到上一轮状态<a class="post-edit-link" href="https://github.com/ZxlDragonDoctor/ZxlDragonDoctor.github.io/edit/main/source/_posts/分割等和子集-从访问标记到上一轮状态.md" title="编辑" target="_blank"><i class="fas fa-pencil-alt"></i></a></h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-11-07T18:00:00.000Z" title="发表于 2026-11-08 02:00:00">2026-11-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-11-07T19:00:28.312Z" title="更新于 2026-11-08 03:00:28">2026-11-08</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0/">算法学习</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">4.8k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>16分钟</span></span><span class="post-meta-separator">|</span><span id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span class="waline-pageview-count" data-path="/2026/11/08/%E5%88%86%E5%89%B2%E7%AD%89%E5%92%8C%E5%AD%90%E9%9B%86-%E4%BB%8E%E8%AE%BF%E9%97%AE%E6%A0%87%E8%AE%B0%E5%88%B0%E4%B8%8A%E4%B8%80%E8%BD%AE%E7%8A%B6%E6%80%81/"><i class="fa-solid fa-spinner fa-spin"></i></span></span><span class="post-meta-separator">|</span><span class="post-meta-commentcount"><i class="far fa-comments fa-fw post-meta-icon"></i><span class="post-meta-label">评论数:</span><a href="/2026/11/08/%E5%88%86%E5%89%B2%E7%AD%89%E5%92%8C%E5%AD%90%E9%9B%86-%E4%BB%8E%E8%AE%BF%E9%97%AE%E6%A0%87%E8%AE%B0%E5%88%B0%E4%B8%8A%E4%B8%80%E8%BD%AE%E7%8A%B6%E6%80%81/#post-comment"><span class="waline-comment-count" data-path="/2026/11/08/%E5%88%86%E5%89%B2%E7%AD%89%E5%92%8C%E5%AD%90%E9%9B%86-%E4%BB%8E%E8%AE%BF%E9%97%AE%E6%A0%87%E8%AE%B0%E5%88%B0%E4%B8%8A%E4%B8%80%E8%BD%AE%E7%8A%B6%E6%80%81/"><i class="fa-solid fa-spinner fa-spin"></i></span></a></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><div id="post-outdate-notice" data="{&quot;limitDay&quot;:365,&quot;messagePrev&quot;:&quot;本文最后更新于&quot;,&quot;messageNext&quot;:&quot;天前，内容可能已过时，请知悉。&quot;,&quot;postUpdate&quot;:&quot;2026-11-08 03:00:28&quot;}" hidden></div><h1 id="分割等和子集：从访问标记到上一轮状态"><a href="#分割等和子集：从访问标记到上一轮状态" class="headerlink" title="分割等和子集：从访问标记到上一轮状态"></a>分割等和子集：从访问标记到上一轮状态</h1><h2 id="题目与参考链接"><a href="#题目与参考链接" class="headerlink" title="题目与参考链接"></a>题目与参考链接</h2><ul>
+<li><strong>力扣题目</strong>：<a target="_blank" rel="noopener" href="https://leetcode.cn/problems/partition-equal-subset-sum/">416. 分割等和子集</a></li>
+</ul>
+<p>本文以“分割等和子集”为例，介绍 0&#x2F;1 背包的状态定义、状态转移和空间优化，重点比较复制数组后的正序更新与原地倒序更新，并分析全局访问标记的局限。</p>
+<blockquote>
+<p>适用条件：<code>nums</code> 是非空正整数数组，总和可以安全存入 Java 的 <code>int</code>。本文讨论的是每个数组位置最多选一次的 0&#x2F;1 背包问题。</p>
+</blockquote>
+<h2 id="一、核心结论"><a href="#一、核心结论" class="headerlink" title="一、核心结论"></a>一、核心结论</h2><p><strong>每一轮，是给每个旧组合一次“选或不选当前元素”的机会，而不是把当前元素反复加入刚生成的新组合。</strong></p>
+<p>因此：</p>
+<ul>
+<li><strong>上一轮状态</strong>：只考虑了前面的元素，还没有考虑当前这个元素。</li>
+<li><strong>本轮转移</strong>：在旧组合的基础上，不选当前元素，或者选当前元素一次。</li>
+<li><strong>不能直接使用本轮新产生的状态继续选当前元素</strong>：那个状态可能已经用过它，再选就重复了。</li>
+<li><strong><code>prev</code> 复制法</strong>：把旧状态单独保存，读取 <code>prev</code>，写入 <code>dp</code>。</li>
+<li><strong>倒序更新法</strong>：不复制数组，通过更新顺序，保证要读取的旧值还没有被覆盖。</li>
+</ul>
+<p>注意：这里的“同一个元素”是指<strong>同一个数组位置</strong>。数组 <code>[2, 2]</code> 有两个不同的元素，可以各选一次；数组 <code>[2, 6]</code> 只有一个 <code>2</code>，不能把这个 <code>2</code> 选两次。</p>
+<h2 id="二、把题目转化成“能否凑出目标和”"><a href="#二、把题目转化成“能否凑出目标和”" class="headerlink" title="二、把题目转化成“能否凑出目标和”"></a>二、把题目转化成“能否凑出目标和”</h2><p>题目要求：把数组分成两个子集，使两边的元素和相同。</p>
+<p>设整个数组的元素和为 <code>sum</code>。</p>
+<ol>
+<li>如果 <code>sum</code> 是奇数，无法分成两个相等的整数和，直接返回 <code>false</code>。</li>
+<li>如果 <code>sum</code> 是偶数，令 <code>target = sum / 2</code>。</li>
+<li>只要找到一个和为 <code>target</code> 的子集，剩余元素的和也一定是 <code>target</code>。</li>
+</ol>
+<p>于是问题变成：</p>
+<blockquote>
+<p>从数组中选择一些元素，每个位置最多选择一次，能否让总和等于 <code>target</code>？</p>
+</blockquote>
+<p>例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">nums = [1, 5, 11, 5]</span><br><span class="line">sum = 22</span><br><span class="line">target = 11</span><br><span class="line"></span><br><span class="line">可以选择 &#123;11&#125;，剩余的是 &#123;1, 5, 5&#125;。</span><br><span class="line">两边的和都是 11，结果为 true。</span><br></pre></td></tr></table></figure>
+
+<h2 id="三、状态定义与初始化"><a href="#三、状态定义与初始化" class="headerlink" title="三、状态定义与初始化"></a>三、状态定义与初始化</h2><p><code>dp[j]</code> 表示：</p>
+<blockquote>
+<p>从目前已经处理过的元素中，能否选出一些，使它们的和恰好等于 <code>j</code>。</p>
+</blockquote>
+<p>初始化：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">boolean</span>[] dp = <span class="keyword">new</span> <span class="title class_">boolean</span>[target + <span class="number">1</span>];</span><br><span class="line">dp[<span class="number">0</span>] = <span class="literal">true</span>;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>dp[0] = true</code>：一个元素都不选，就能得到和 <code>0</code>。</li>
+<li>其他位置初始为 <code>false</code>：还没有处理任何元素，无法凑出正数。</li>
+</ul>
+<h3 id="重要区别：dp-在记录可能性，不是在分配元素"><a href="#重要区别：dp-在记录可能性，不是在分配元素" class="headerlink" title="重要区别：dp 在记录可能性，不是在分配元素"></a>重要区别：<code>dp</code> 在记录可能性，不是在分配元素</h3><p><code>dp[2] = true</code> 只是在说“存在一种凑出 2 的方案”。</p>
+<p>它<strong>不表示</strong>：“这个方案使用的数字被永久拿走了，其他方案不能再用。”</p>
+<p>不同的 <code>dp[j]</code> 可以对应不同的候选组合。它们不需要互相排斥，也不是同时从数组里取走元素。</p>
+<h2 id="四、全局访问标记的局限"><a href="#四、全局访问标记的局限" class="headerlink" title="四、全局访问标记的局限"></a>四、全局访问标记的局限</h2><p>一种容易产生的误区是：某个元素一旦参与了状态更新，就将其全局标记为已使用。以下为这种思路的伪代码，仅用于说明问题，并非可直接运行的 Java 实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (可以用 nums[k] 更新某个状态) &#123;</span><br><span class="line">    vist[k] = <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>问题在于：全局 <code>vist[k]</code> 只记录“这个元素用过了”，却不知道“在哪个候选组合中用过了”。</p>
+<h3 id="4-1-两个合法方案，会被全局标记错误地互相限制"><a href="#4-1-两个合法方案，会被全局标记错误地互相限制" class="headerlink" title="4.1 两个合法方案，会被全局标记错误地互相限制"></a>4.1 两个合法方案，会被全局标记错误地互相限制</h3><p>假设已经处理过数字 <code>1</code>，现在处理数字 <code>2</code>，并且目标容量至少为 <code>3</code>。</p>
+<p>下面两个转移都合法：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">旧组合 &#123;&#125;  + 当前的 2 -&gt; &#123;2&#125;     对应 dp[2] = true</span><br><span class="line">旧组合 &#123;1&#125; + 当前的 2 -&gt; &#123;1, 2&#125;  对应 dp[3] = true</span><br></pre></td></tr></table></figure>
+
+<p>这两个组合中的 <code>2</code> 都只出现一次。</p>
+<p>但如果更新 <code>dp[2]</code> 后，就把当前的 <code>2</code> 全局标记为已使用，那么 <code>{1, 2}</code> 这个合法候选方案也会被禁止。</p>
+<p><strong>禁止的是同一方案内重复选取同一元素，不是禁止同一元素出现在不同候选方案中。</strong></p>
+<h3 id="4-2-反例：全局标记导致合法组合遗漏"><a href="#4-2-反例：全局标记导致合法组合遗漏" class="headerlink" title="4.2 反例：全局标记导致合法组合遗漏"></a>4.2 反例：全局标记导致合法组合遗漏</h3><p>考虑如下错误策略：外层按目标和从小到大遍历，内层扫描数组；跳过已被标记的元素，并在某个元素成功参与一次更新后将其全局标记。即使循环变量和跳过逻辑均正确，这种策略仍会遗漏合法组合。</p>
+<p>输入：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">nums = [1, 2, 3, 4]</span><br><span class="line">target = 5</span><br></pre></td></tr></table></figure>
+
+<p>可能发生的过程：</p>
+<table>
+<thead>
+<tr>
+<th>当前目标和</th>
+<th>更新状态所用的元素</th>
+<th>全局结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>用 1 得到 <code>dp[1]</code></td>
+<td>1 被标记</td>
+</tr>
+<tr>
+<td>2</td>
+<td>用 2 得到 <code>dp[2]</code></td>
+<td>2 被标记</td>
+</tr>
+<tr>
+<td>3</td>
+<td>用 3 得到 <code>dp[3]</code></td>
+<td>3 被标记</td>
+</tr>
+<tr>
+<td>4</td>
+<td>用 4 得到 <code>dp[4]</code></td>
+<td>4 被标记</td>
+</tr>
+<tr>
+<td>5</td>
+<td>所有元素都被标记</td>
+<td>无法继续更新</td>
+</tr>
+</tbody></table>
+<p>这样会返回 <code>false</code>，但实际上 <code>{1, 4}</code> 和 <code>{2, 3}</code> 都能凑出 <code>5</code>。</p>
+<h3 id="4-3-访问标记的适用范围"><a href="#4-3-访问标记的适用范围" class="headerlink" title="4.3 访问标记的适用范围"></a>4.3 访问标记的适用范围</h3><p>访问标记并非在所有算法中都不适用，关键在于它是否与具体的候选路径关联。</p>
+<p>在回溯中，如果访问标记属于<strong>当前搜索路径</strong>，并在回退时撤销，就能表达当前组合选过哪些元素。</p>
+<p>回溯的路径级标记与动态规划的状态汇总属于不同的管理方式，不能直接用一个全局 <code>vist</code> 替代本文一维布尔 <code>dp</code> 的元素使用约束。</p>
+<h2 id="五、上一轮状态的定义"><a href="#五、上一轮状态的定义" class="headerlink" title="五、上一轮状态的定义"></a>五、上一轮状态的定义</h2><p>以下为循环结构示意，省略号表示尚未展开的循环边界；完整可运行代码见第十节：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="type">int</span> num : nums) &#123;</span><br><span class="line">    <span class="comment">// 一次外层循环：处理当前这个元素</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">j</span> <span class="operator">=</span> ...; ...; ...) &#123;</span><br><span class="line">        <span class="comment">// 一次内层循环：计算一个目标和</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>本文的“一轮”指<strong>外层循环处理一个元素</strong>，不是内层循环的一次 <code>j</code> 更新。</p>
+<p>例如 <code>nums = [1, 2, 5]</code>：</p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>已经允许参与选择的元素</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>初始化</td>
+<td>没有元素</td>
+</tr>
+<tr>
+<td>处理完第 1 个元素</td>
+<td><code>[1]</code></td>
+</tr>
+<tr>
+<td>处理完第 2 个元素</td>
+<td><code>[1, 2]</code></td>
+</tr>
+<tr>
+<td>处理完第 3 个元素</td>
+<td><code>[1, 2, 5]</code></td>
+</tr>
+</tbody></table>
+<p>正在处理第 2 个元素 <code>2</code> 时：</p>
+<ul>
+<li>上一轮：只使用 <code>[1]</code> 的选择结果。</li>
+<li>本轮：把当前 <code>2</code> 的“选或不选”加入考虑。</li>
+</ul>
+<p>因此，上一轮的所有组合都保证**没有使用过当前这个 <code>2</code>**。</p>
+<h2 id="六、为什么要读取上一轮状态？"><a href="#六、为什么要读取上一轮状态？" class="headerlink" title="六、为什么要读取上一轮状态？"></a>六、为什么要读取上一轮状态？</h2><p>先看状态转移：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dp[j] = prev[j] || prev[j - num];</span><br></pre></td></tr></table></figure>
+
+<p>其中：</p>
+<ul>
+<li><code>prev[j]</code>：不选当前元素，之前就能凑出 <code>j</code>。</li>
+<li><code>prev[j - num]</code>：之前能凑出 <code>j - num</code>，<strong>再选当前元素一次</strong>，得到 <code>j</code>。</li>
+</ul>
+<p>核心是：<strong>这个转移本身已经包含一次“选择当前元素”的动作。</strong></p>
+<p>所以，作为起点的组合必须还没有用过当前元素；否则再加一次，就会重复。</p>
+<h3 id="6-1-用-2-6-看清重复选择"><a href="#6-1-用-2-6-看清重复选择" class="headerlink" title="6.1 用 [2, 6] 看清重复选择"></a>6.1 用 <code>[2, 6]</code> 看清重复选择</h3><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">nums = [2, 6]</span><br><span class="line">sum = 8</span><br><span class="line">target = 4</span><br></pre></td></tr></table></figure>
+
+<p>正确结果是 <code>false</code>，因为没有任何子集的和是 <code>4</code>。</p>
+<p>但如果处理数字 <code>2</code> 时，正序读取刚更新的同一个 <code>dp</code> 数组，就会发生：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">旧方案 &#123;&#125;  + 当前这个 2 -&gt; &#123;2&#125;      得到 dp[2] = true</span><br><span class="line">新方案 &#123;2&#125; + 当前这个 2 -&gt; &#123;2, 2&#125;   错误得到 dp[4] = true</span><br></pre></td></tr></table></figure>
+
+<p>第二步的起点已经用过当前这个元素，却又把它加了一次。</p>
+<h3 id="6-2-布尔状态不记录元素使用路径"><a href="#6-2-布尔状态不记录元素使用路径" class="headerlink" title="6.2 布尔状态不记录元素使用路径"></a>6.2 布尔状态不记录元素使用路径</h3><p><code>dp[j]</code> 只存 <code>true / false</code>，不会记录“是用了哪些元素才得到的”。</p>
+<p>当本轮已经修改过一个位置时，仅凭它是 <code>true</code>，无法知道对应方案是否使用了当前元素。</p>
+<p><strong>读取上一轮状态，就是从源头保证起点中没有使用当前元素。</strong></p>
+<h3 id="6-3-用二维定义把逻辑写完整"><a href="#6-3-用二维定义把逻辑写完整" class="headerlink" title="6.3 用二维定义把逻辑写完整"></a>6.3 用二维定义把逻辑写完整</h3><p>定义 <code>F(i, s)</code>：只使用前 <code>i</code> 个元素，能否凑出和 <code>s</code>。</p>
+<p>当前元素是 <code>x = nums[i - 1]</code>。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">不选 x：F(i - 1, s)</span><br><span class="line">选取 x：F(i - 1, s - x)，然后把 x 加进去</span><br></pre></td></tr></table></figure>
+
+<p>因此：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">当 s &gt;= x：</span><br><span class="line">F(i, s) = F(i - 1, s) OR F(i - 1, s - x)</span><br><span class="line"></span><br><span class="line">当 s &lt; x：</span><br><span class="line">F(i, s) = F(i - 1, s)</span><br></pre></td></tr></table></figure>
+
+<p>初始条件：<code>F(0, 0) = true</code>，<code>F(0, s) = false</code>（<code>s &gt; 0</code>）。</p>
+<p>注意：两种选择都以 <code>i - 1</code> 为来源，因为要先排除当前元素，再决定本轮是否选它。</p>
+<h2 id="七、正序实现：复制上一轮状态"><a href="#七、正序实现：复制上一轮状态" class="headerlink" title="七、正序实现：复制上一轮状态"></a>七、正序实现：复制上一轮状态</h2><p>复制数组法将上一轮状态与本轮结果分别保存。内层循环只读取 <code>prev</code>、写入 <code>dp</code>，因此可以按目标和从小到大更新：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="type">int</span> num : nums) &#123;</span><br><span class="line">    <span class="type">boolean</span>[] prev = dp.clone();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">j</span> <span class="operator">=</span> num; j &lt;= target; j++) &#123;</span><br><span class="line">        dp[j] = prev[j] || prev[j - num];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-1-clone-做了什么？"><a href="#7-1-clone-做了什么？" class="headerlink" title="7.1 clone() 做了什么？"></a>7.1 <code>clone()</code> 做了什么？</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">boolean</span>[] prev = dp.clone();</span><br></pre></td></tr></table></figure>
+
+<p>这会创建一个独立的新数组，并把 <code>dp</code> 中的布尔值复制过去。</p>
+<p>复制后：</p>
+<ul>
+<li>刚开始，两份数组的内容相同。</li>
+<li>修改 <code>dp</code>，不会修改 <code>prev</code>。</li>
+<li>整个内层循环只读取 <code>prev</code>，不修改它。</li>
+<li>等外层开始处理下一个元素时，才重新复制最新的 <code>dp</code>。</li>
+</ul>
+<p>注意下面两句不同：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">boolean</span>[] prev = dp.clone(); <span class="comment">// 两个独立数组</span></span><br><span class="line"><span class="type">boolean</span>[] prev = dp;         <span class="comment">// 指向同一个数组，不能隔离本轮修改</span></span><br></pre></td></tr></table></figure>
+
+<p>以上两句是对比示例，不应同时写在同一个作用域中。</p>
+<h3 id="7-2-逐步推演：已经处理完-1，现在处理-2"><a href="#7-2-逐步推演：已经处理完-1，现在处理-2" class="headerlink" title="7.2 逐步推演：已经处理完 1，现在处理 2"></a>7.2 逐步推演：已经处理完 1，现在处理 2</h3><p>取 <code>nums = [1, 2, 5]</code>，<code>target = 4</code>。</p>
+<p>已经处理完 <code>1</code>，开始处理 <code>2</code>，复制后是：</p>
+<table>
+<thead>
+<tr>
+<th>数组 &#x2F; 下标</th>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>prev</code></td>
+<td>true</td>
+<td>true</td>
+<td>false</td>
+<td>false</td>
+<td>false</td>
+</tr>
+<tr>
+<td><code>dp</code></td>
+<td>true</td>
+<td>true</td>
+<td>false</td>
+<td>false</td>
+<td>false</td>
+</tr>
+</tbody></table>
+<p>接下来正序更新：</p>
+<table>
+<thead>
+<tr>
+<th>内层步骤</th>
+<th>实际计算</th>
+<th>结果</th>
+<th>对应含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>j = 2</code></td>
+<td>&#96;prev[2]</td>
+<td></td>
+<td>prev[0]&#96;</td>
+</tr>
+<tr>
+<td><code>j = 3</code></td>
+<td>&#96;prev[3]</td>
+<td></td>
+<td>prev[1]&#96;</td>
+</tr>
+<tr>
+<td><code>j = 4</code></td>
+<td>&#96;prev[4]</td>
+<td></td>
+<td>prev[2]&#96;</td>
+</tr>
+</tbody></table>
+<p>第三步尤其重要：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">此时 dp[2] 已经是 true，但 prev[2] 仍然是 false。</span><br><span class="line"></span><br><span class="line">读的是 prev[2]，不是 dp[2]。</span><br><span class="line">所以不会用当前这个 2 凑出 2 后，又用它凑出 4。</span><br></pre></td></tr></table></figure>
+
+<p>这一轮结束后：</p>
+<table>
+<thead>
+<tr>
+<th>数组 &#x2F; 下标</th>
+<th>0</th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>prev</code>：保持旧值</td>
+<td>true</td>
+<td>true</td>
+<td>false</td>
+<td>false</td>
+<td>false</td>
+</tr>
+<tr>
+<td><code>dp</code>：本轮结果</td>
+<td>true</td>
+<td>true</td>
+<td>true</td>
+<td>true</td>
+<td>false</td>
+</tr>
+</tbody></table>
+<p>下一轮处理 <code>5</code> 时，重新复制这份最新的 <code>dp</code>。因为 <code>5 &gt; target</code>，不能选择它来凑出目标范围内的和，内层循环不会执行。</p>
+<h3 id="7-3-为什么内层从-num-开始？"><a href="#7-3-为什么内层从-num-开始？" class="headerlink" title="7.3 为什么内层从 num 开始？"></a>7.3 为什么内层从 <code>num</code> 开始？</h3><p>因为 <code>j &lt; num</code> 时，当前正整数 <code>num</code> 不可能被选进和为 <code>j</code> 的组合；同时 <code>j - num</code> 也会是负数。</p>
+<p>这些位置保持旧值即可，不需要更新。</p>
+<h2 id="八、倒序实现：在原数组上更新"><a href="#八、倒序实现：在原数组上更新" class="headerlink" title="八、倒序实现：在原数组上更新"></a>八、倒序实现：在原数组上更新</h2><p>倒序遍历通过调整更新顺序，使依赖位置在读取时仍保留上一轮的值，因此可以省去每轮的数组复制：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="type">int</span> num : nums) &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">j</span> <span class="operator">=</span> target; j &gt;= num; j--) &#123;</span><br><span class="line">        dp[j] = dp[j] || dp[j - num];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="8-1-为什么倒序读到的是旧值？"><a href="#8-1-为什么倒序读到的是旧值？" class="headerlink" title="8.1 为什么倒序读到的是旧值？"></a>8.1 为什么倒序读到的是旧值？</h3><p>本题 <code>num &gt; 0</code>，因此：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">j - num &lt; j</span><br></pre></td></tr></table></figure>
+
+<p>当倒序循环正在更新 <code>dp[j]</code> 时：</p>
+<ul>
+<li>大于 <code>j</code> 的位置，可能已经在本轮更新。</li>
+<li><code>dp[j]</code> 自己，还没有在本轮更新。</li>
+<li>小于 <code>j</code> 的位置，也还没有在本轮更新。</li>
+</ul>
+<p>所以，右侧的 <code>dp[j]</code> 和 <code>dp[j - num]</code> 都还是上一轮结束时的值。</p>
+<p><strong>不是程序查找了一份历史数据，而是这些位置的旧值还没被覆盖。</strong></p>
+<h3 id="8-2-再看处理数字-2-的顺序"><a href="#8-2-再看处理数字-2-的顺序" class="headerlink" title="8.2 再看处理数字 2 的顺序"></a>8.2 再看处理数字 2 的顺序</h3><p>仍然使用上一节的初始状态：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">下标：  0     1     2      3      4</span><br><span class="line">dp：   true  true  false  false  false</span><br></pre></td></tr></table></figure>
+
+<p>倒序更新：</p>
+<table>
+<thead>
+<tr>
+<th>顺序</th>
+<th>更新位置</th>
+<th>读取位置</th>
+<th>为什么没有重复</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>dp[4]</code></td>
+<td><code>dp[2]</code></td>
+<td>还没有执行到 <code>j = 2</code>，所以读到旧的 false</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>dp[3]</code></td>
+<td><code>dp[1]</code></td>
+<td>读到上一轮的 true，得到 <code>{1, 2}</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>dp[2]</code></td>
+<td><code>dp[0]</code></td>
+<td>现在才更新 <code>dp[2]</code>，得到 <code>{2}</code></td>
+</tr>
+</tbody></table>
+<p>关键时间顺序：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">先读取旧 dp[2] 来计算 dp[4]</span><br><span class="line">              |</span><br><span class="line">              v</span><br><span class="line">之后才把 dp[2] 更新为 true</span><br></pre></td></tr></table></figure>
+
+<p>当 <code>dp[2]</code> 变成新值时，<code>dp[4]</code> 已经算完，不会再回来用这个新值。</p>
+<h3 id="8-3-正序到底能不能用？"><a href="#8-3-正序到底能不能用？" class="headerlink" title="8.3 正序到底能不能用？"></a>8.3 正序到底能不能用？</h3><table>
+<thead>
+<tr>
+<th>写法</th>
+<th>是否正确</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>正序，读取同一个 <code>dp</code> 数组</td>
+<td>不能保证正确</td>
+<td>可能读取本轮刚生成的状态，重复使用当前元素</td>
+</tr>
+<tr>
+<td>正序，读取复制出的 <code>prev</code></td>
+<td>正确</td>
+<td>只读旧状态，不受 <code>dp</code> 修改影响</td>
+</tr>
+<tr>
+<td>倒序，读取同一个 <code>dp</code> 数组</td>
+<td>正确</td>
+<td>通过更新顺序保证依赖位置仍是旧状态</td>
+</tr>
+</tbody></table>
+<p>所以，不是“正序天然错误”，而是<strong>原地更新时，正序不能保证读取旧状态</strong>。</p>
+<h2 id="九、常见实现错误与边界检查"><a href="#九、常见实现错误与边界检查" class="headerlink" title="九、常见实现错误与边界检查"></a>九、常见实现错误与边界检查</h2><p>本节归纳独立于具体提交记录的实现陷阱。以下错误片段用于说明问题，不属于第十节的正确算法。</p>
+<h3 id="9-1-内层循环递增了错误变量"><a href="#9-1-内层循环递增了错误变量" class="headerlink" title="9.1 内层循环递增了错误变量"></a>9.1 内层循环递增了错误变量</h3><p>错误示例：假设 <code>i</code> 表示外层目标和，<code>j</code> 表示内层数组下标。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="type">int</span> <span class="variable">j</span> <span class="operator">=</span> <span class="number">0</span>; j &lt; len &amp;&amp; !vist[j]; i++) &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里写成了 <code>i++</code>，应当是 <code>j++</code>。否则 <code>j</code> 不变，外层目标和 <code>i</code> 被错误推进，可能导致数组越界或错误结果。</p>
+<p>循环变量修正只解决控制流程错误；若仍使用第四节所述的全局访问标记，状态设计依然不正确。</p>
+<h3 id="9-2-把-vist-j-写进条件，不是“跳过已访问元素”"><a href="#9-2-把-vist-j-写进条件，不是“跳过已访问元素”" class="headerlink" title="9.2 把 !vist[j] 写进条件，不是“跳过已访问元素”"></a>9.2 把 <code>!vist[j]</code> 写进条件，不是“跳过已访问元素”</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">j &lt; len &amp;&amp; !vist[j]</span><br></pre></td></tr></table></figure>
+
+<p>一旦遇到已访问元素，整个内层循环就结束，不会继续检查后面的元素。</p>
+<p>如果某个算法需要跳过元素，应使用类似 <code>continue</code> 的逻辑。但本题不应靠全局 <code>vist</code> 解决重复选择问题。</p>
+<h3 id="9-3-缺少奇偶判断"><a href="#9-3-缺少奇偶判断" class="headerlink" title="9.3 缺少奇偶判断"></a>9.3 缺少奇偶判断</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (sum % <span class="number">2</span> != <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>例如 <code>[1, 2]</code> 的总和为 <code>3</code>，整数除法会得到 <code>target = 1</code>。虽然能凑出 <code>1</code>，但不能据此判断可以等分。</p>
+<h3 id="9-4-成员变量在多次调用之间残留状态"><a href="#9-4-成员变量在多次调用之间残留状态" class="headerlink" title="9.4 成员变量在多次调用之间残留状态"></a>9.4 成员变量在多次调用之间残留状态</h3><p>如果将总和定义为成员变量：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="type">int</span> <span class="variable">sum</span> <span class="operator">=</span> <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+
+<p>如果同一个 <code>Solution</code> 对象多次调用方法，又没有清零，就会把前一次的和累加进去。</p>
+<p>使用方法内的局部变量 <code>int sum = 0</code>，可使每次调用独立计算；若采用成员变量，则必须在方法开始时明确重置。</p>
+<h3 id="9-5-循环结构要与状态含义配套"><a href="#9-5-循环结构要与状态含义配套" class="headerlink" title="9.5 循环结构要与状态含义配套"></a>9.5 循环结构要与状态含义配套</h3><p>本文的一维 0&#x2F;1 背包写法是：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">外层：依次处理数组元素</span><br><span class="line">内层：更新各个目标和的可达性</span><br></pre></td></tr></table></figure>
+
+<p>倒序优化成立的前提是外层按元素推进、内层按目标和更新。仅将某个目标和循环改为倒序，并不能替代对状态定义和循环层次的检查。</p>
+<h2 id="十、完整-Java-实现"><a href="#十、完整-Java-实现" class="headerlink" title="十、完整 Java 实现"></a>十、完整 Java 实现</h2><p>以下两个版本二选一使用。两段代码都使用 <code>class Solution</code>，不要把它们原样放进同一个 Java 文件。</p>
+<h3 id="10-1-倒序版本：一维数组原地更新"><a href="#10-1-倒序版本：一维数组原地更新" class="headerlink" title="10.1 倒序版本：一维数组原地更新"></a>10.1 倒序版本：一维数组原地更新</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Solution</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">canPartition</span><span class="params">(<span class="type">int</span>[] nums)</span> &#123;</span><br><span class="line">        <span class="type">int</span> <span class="variable">sum</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> num : nums) &#123;</span><br><span class="line">            sum += num;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (sum % <span class="number">2</span> != <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="type">int</span> <span class="variable">target</span> <span class="operator">=</span> sum / <span class="number">2</span>;</span><br><span class="line">        <span class="type">boolean</span>[] dp = <span class="keyword">new</span> <span class="title class_">boolean</span>[target + <span class="number">1</span>];</span><br><span class="line">        dp[<span class="number">0</span>] = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> num : nums) &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">j</span> <span class="operator">=</span> target; j &gt;= num; j--) &#123;</span><br><span class="line">                dp[j] = dp[j] || dp[j - num];</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> dp[target];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="10-2-正序版本：复制上一轮状态"><a href="#10-2-正序版本：复制上一轮状态" class="headerlink" title="10.2 正序版本：复制上一轮状态"></a>10.2 正序版本：复制上一轮状态</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Solution</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">canPartition</span><span class="params">(<span class="type">int</span>[] nums)</span> &#123;</span><br><span class="line">        <span class="type">int</span> <span class="variable">sum</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> num : nums) &#123;</span><br><span class="line">            sum += num;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (sum % <span class="number">2</span> != <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="type">int</span> <span class="variable">target</span> <span class="operator">=</span> sum / <span class="number">2</span>;</span><br><span class="line">        <span class="type">boolean</span>[] dp = <span class="keyword">new</span> <span class="title class_">boolean</span>[target + <span class="number">1</span>];</span><br><span class="line">        dp[<span class="number">0</span>] = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> num : nums) &#123;</span><br><span class="line">            <span class="type">boolean</span>[] prev = dp.clone();</span><br><span class="line">            <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">j</span> <span class="operator">=</span> num; j &lt;= target; j++) &#123;</span><br><span class="line">                dp[j] = prev[j] || prev[j - num];</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> dp[target];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="10-3-复杂度"><a href="#10-3-复杂度" class="headerlink" title="10.3 复杂度"></a>10.3 复杂度</h3><p>设数组长度为 <code>n</code>，目标和为 <code>T = sum / 2</code>。</p>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>时间复杂度</th>
+<th>辅助空间复杂度</th>
+<th>区别</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>倒序更新</td>
+<td><code>O(nT)</code></td>
+<td><code>O(T)</code></td>
+<td>不需要每轮复制数组</td>
+</tr>
+<tr>
+<td>复制数组</td>
+<td><code>O(nT)</code></td>
+<td><code>O(T)</code></td>
+<td>每轮额外复制一个长度为 <code>T + 1</code> 的数组</td>
+</tr>
+</tbody></table>
+<p>复制法每轮的复制也是 <code>O(T)</code>，因此总体时间复杂度仍是 <code>O(nT)</code>；同时需要使用的数组只有常数份，所以辅助空间仍是 <code>O(T)</code>。</p>
+<h2 id="十一、自测与复习"><a href="#十一、自测与复习" class="headerlink" title="十一、自测与复习"></a>十一、自测与复习</h2><h3 id="11-1-检查代码的测试用例"><a href="#11-1-检查代码的测试用例" class="headerlink" title="11.1 检查代码的测试用例"></a>11.1 检查代码的测试用例</h3><table>
+<thead>
+<tr>
+<th>输入</th>
+<th>预期输出</th>
+<th>检查重点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>[1, 5, 11, 5]</code></td>
+<td><code>true</code></td>
+<td>正常可等分情况</td>
+</tr>
+<tr>
+<td><code>[1, 2, 3, 5]</code></td>
+<td><code>false</code></td>
+<td>总和为奇数</td>
+</tr>
+<tr>
+<td><code>[1, 2, 5]</code></td>
+<td><code>false</code></td>
+<td>总和为偶数，但无法凑出一半</td>
+</tr>
+<tr>
+<td><code>[2, 6]</code></td>
+<td><code>false</code></td>
+<td>不能把唯一的 2 重复使用</td>
+</tr>
+<tr>
+<td><code>[1, 2, 3, 4]</code></td>
+<td><code>true</code></td>
+<td>不同候选方案不能被全局访问标记互相限制</td>
+</tr>
+<tr>
+<td><code>[2, 2]</code></td>
+<td><code>true</code></td>
+<td>相同数值、不同位置的元素可以分别使用</td>
+</tr>
+<tr>
+<td><code>[2]</code></td>
+<td><code>false</code></td>
+<td>单个正整数不能等分</td>
+</tr>
+</tbody></table>
+<p>还应使用同一个 <code>Solution</code> 对象先后测试 <code>[2, 2]</code> 和 <code>[1, 1]</code>，两次都应返回 <code>true</code>。如果错误保留上一次的 <code>sum = 4</code>，第二次会把总和算成 <code>6</code>、目标算成 <code>3</code>，从而错误返回 <code>false</code>。</p>
+<p>验证说明：本文两种 Java 实现已通过上述 7 个用例，并对长度为 1～7、每个元素取值为 1～5 的全部 97,655 个数组进行了子集穷举对照，结果一致；同时验证了对象重复调用和复制数组的状态推演。这是有限范围的实现验证，正确性依据仍是前文的状态定义与转移逻辑。</p>
+<h3 id="11-2-复习问题"><a href="#11-2-复习问题" class="headerlink" title="11.2 复习问题"></a>11.2 复习问题</h3><ol>
+<li><code>dp[0]</code> 为什么初始化为 <code>true</code>？</li>
+<li>处理当前元素时，“上一轮”具体指什么？</li>
+<li>为什么不能用全局 <code>vist[k]</code> 表示数字是否已经使用？</li>
+<li><code>dp[j] = prev[j] || prev[j - num]</code> 的两项分别代表什么？</li>
+<li>为什么 <code>prev = dp</code> 不能替代 <code>prev = dp.clone()</code>？</li>
+<li>倒序更新到 <code>j</code> 时，为什么 <code>dp[j - num]</code> 还是旧值？</li>
+<li>如果读取独立的 <code>prev</code>，内层是否可以正序？</li>
+<li>两个值相等的元素是否可以分别使用？</li>
+</ol>
+<h3 id="11-3-参考答案"><a href="#11-3-参考答案" class="headerlink" title="11.3 参考答案"></a>11.3 参考答案</h3><ol>
+<li>空集的元素和是 <code>0</code>，所以和 <code>0</code> 可达。</li>
+<li>外层循环尚未处理当前元素时，只使用前面元素得到的状态。</li>
+<li>不同 <code>dp</code> 状态代表不同候选方案；同一个元素可以出现在不同候选方案中，只是不能在同一方案内重复使用。</li>
+<li>左边表示不选当前元素；右边表示旧组合凑出 <code>j - num</code>，再选当前元素一次。</li>
+<li>前者只是两个引用指向同一个数组；后者才创建内容相同但独立的新数组。</li>
+<li><code>num &gt; 0</code>，所以 <code>j - num &lt; j</code>；倒序时小下标还没被本轮更新。</li>
+<li>可以，因为所有转移都读取旧数组，不会读取本轮新值。</li>
+<li>可以，每个数组位置是一个独立元素，各自最多使用一次。</li>
+</ol>
+<h2 id="十二、总结：两种实现共享同一状态转移"><a href="#十二、总结：两种实现共享同一状态转移" class="headerlink" title="十二、总结：两种实现共享同一状态转移"></a>十二、总结：两种实现共享同一状态转移</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">每个元素只能用一次</span><br><span class="line">        |</span><br><span class="line">        v</span><br><span class="line">本轮只做一次“选或不选当前元素”的决定</span><br><span class="line">        |</span><br><span class="line">        v</span><br><span class="line">选它之前，起点组合必须还没使用过它</span><br><span class="line">        |</span><br><span class="line">        v</span><br><span class="line">从上一轮状态转移</span><br><span class="line">        |</span><br><span class="line">        +-- 复制旧数组：读 prev，写 dp</span><br><span class="line">        |</span><br><span class="line">        +-- 原地倒序：先读旧值，之后才覆盖它</span><br></pre></td></tr></table></figure>
+
+<p><strong>正序复制与原地倒序的共同目标，是让本轮选择只基于尚未使用当前元素的旧状态，从而保证每个元素在同一方案中最多出现一次。</strong></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a target="_blank" rel="noopener" href="https://github.com/ZxlDragonDoctor">猪教授</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://zxldragondoctor.github.io/2026/11/08/%E5%88%86%E5%89%B2%E7%AD%89%E5%92%8C%E5%AD%90%E9%9B%86-%E4%BB%8E%E8%AE%BF%E9%97%AE%E6%A0%87%E8%AE%B0%E5%88%B0%E4%B8%8A%E4%B8%80%E8%BD%AE%E7%8A%B6%E6%80%81/">https://zxldragondoctor.github.io/2026/11/08/%E5%88%86%E5%89%B2%E7%AD%89%E5%92%8C%E5%AD%90%E9%9B%86-%E4%BB%8E%E8%AE%BF%E9%97%AE%E6%A0%87%E8%AE%B0%E5%88%B0%E4%B8%8A%E4%B8%80%E8%BD%AE%E7%8A%B6%E6%80%81/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://ZxlDragonDoctor.github.io" target="_blank">花独柒</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E7%AE%97%E6%B3%95/">算法</a><a class="post-meta__tags" href="/tags/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92/">动态规划</a><a class="post-meta__tags" href="/tags/0-1%E8%83%8C%E5%8C%85/">0-1背包</a><a class="post-meta__tags" href="/tags/LeetCode/">LeetCode</a></div><div class="post-share"><div class="social-share" data-image="/img/zxl_7.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/10/27/%E5%A0%86%E6%8E%92%E5%BA%8F%E5%8E%9F%E7%90%86%E4%B8%8E%E8%BE%B9%E7%95%8C%E6%8E%A8%E5%AF%BC/" title="为什么堆排序要从 `n/2 - 1` 开始建堆？"><img class="cover" src="/img/loading.jpg" data-lazy-src="/img/zxl_4.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">为什么堆排序要从 `n/2 - 1` 开始建堆？</div></div><div class="info-2"><div class="info-item-1">为什么堆排序要从 n/2 - 1 开始建堆？ 从一个容易被背下来的公式出发，把堆排序的复杂度、代码骨架、0 基与 1 基的边界差异，以及它和 PriorityQueue 的真实关系一次讲清。  引言「手写一遍堆排序」是后端面试里的常客，而绝大多数人卡在同一个位置：建堆那行循环，起点为什么是 n/2 - 1？ 把它背下来并不难，难的是说清它从哪来、为什么不能写成 n/2、以及当教材用 1 基数组而实际代码用 0 基数组时，哪些下标要跟着变。这三个问题一旦想通，堆排序就不再是一个需要记忆的算法，而是完全二叉树的下标算术 + 一次原地置换。 本文按这个顺序展开：先看堆排序在做什么，再推复杂度和建堆起点，然后逐处对齐 0 基与 1 基的边界，最后澄清一个高频误解——PriorityQueue 用了堆，但它不是堆排序。  一、堆排序只做两件事堆排序的全部工作量可以压缩成两个阶段，理解了这个骨架，后面的公式都是它的推论。  建堆：把无序数组原地调整成一个大顶堆（或小顶堆）。 反复取堆顶：把堆顶（最大值）和当前末尾交换，最大值就归位到数组尾部；然后把有效范围缩短一格，重新调整堆顶。   关键洞...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/10/15/%E5%9B%9E%E6%96%87%E5%AD%90%E4%B8%B2%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="回文子串学习笔记"><img class="cover" src="/img/loading.jpg" data-lazy-src="/img/zxl_3.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-15</div><div class="info-item-2">回文子串学习笔记</div></div><div class="info-2"><div class="info-item-1">回文子串学习笔记：暴力枚举、动态规划与中心扩展对应力扣题目647. 回文子串（Palindromic Substrings） 题目要求统计字符串中所有回文子串的数量。子串必须连续；不同位置出现的相同字符串要分别计数。例如 &quot;aaa&quot; 中有 3 个 &quot;a&quot;、2 个 &quot;aa&quot; 和 1 个 &quot;aaa&quot;，答案是 6。 本文介绍三种常见方法：  暴力枚举子串并逐个判断。 动态规划，记录每个区间是否为回文。 中心扩展，从每个可能的回文中心向两边扩展。   一、先区分子串和子序列 子串（substring）：字符串中连续的一段字符。 子序列（subsequence）：可以跳过一些字符，但保留剩余字符的相对顺序。  例如字符串 &quot;aba&quot; 中，&quot;aa&quot; 是子序列，但不是子串，因为两个 a 中间隔着 b。 这也是回溯代码容易出错的地方：如果循环里可以跳过字符并递归选择后面的字符，那么枚举到的通常是子序列，不一定是子串。  二、最直接的方法：枚举每个子串一个子串可以由左右端点 le...</div></div></div></a><a class="pagination-related" href="/2026/10/15/%E6%89%93%E5%AE%B6%E5%8A%AB%E8%88%8D1%E5%88%B03%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="打家劫舍1到3学习笔记"><img class="cover" src="/img/loading.jpg" data-lazy-src="/img/zxl_3.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-15</div><div class="info-item-2">打家劫舍1到3学习笔记</div></div><div class="info-2"><div class="info-item-1">打家劫舍 I、II、III：从线性 DP 到树形 DP打家劫舍系列的共同限制是：不能同时选择相邻的房屋。每道题的结构不同，状态定义也随之变化：  I：房屋排成一条直线，用一维动态规划解决。 II：房屋首尾相邻形成一个环，把问题拆成两个线性范围。 III：房屋组成二叉树，对每个节点分别计算“偷”和“不偷”两种状态。  对应力扣题目 198. 打家劫舍（House Robber） 213. 打家劫舍 II（House Robber II） 337. 打家劫舍 III（House Robber III）   一、共同思路：对每间房作“偷或不偷”的选择处理当前房屋时有两种选择：  不偷当前房屋：答案沿用前面房屋能得到的最大金额。 偷当前房屋：不能偷相邻房屋，所以金额要加上“上上间房屋之前”的最优结果。  线性排列下的基本递推关系是： 1dp[i] = max(dp[i - 1], dp[i - 2] + nums[i])  三道题的区别在于房屋之间的相邻关系：I 是直线，II 多了首尾相邻，III 则需要根据树上的父子关系判断能否同时选择。  二、打家劫舍 I：房屋排成直线题目特点房屋沿...</div></div></div></a><a class="pagination-related" href="/2026/09/23/%E8%87%AA%E7%94%B1%E6%91%84%E5%BD%B1%E5%B8%88%E7%9A%84%E6%9C%80%E5%A4%A7%E6%94%B6%E7%9B%8A%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="自由摄影师的最大收益算法学习笔记"><img class="cover" src="/img/loading.jpg" data-lazy-src="/img/zxl_8.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-23</div><div class="info-item-2">自由摄影师的最大收益算法学习笔记</div></div><div class="info-2"><div class="info-item-1">自由摄影师的最大收益 — 学习记录 来源：华为 OD 9&#x2F;23 真题标签：排序 + 动态规划 + 0-1 背包语言：Java   1. 题目描述小华是自由职业摄影师，接到 N 个拍摄订单。每个订单 i 包含：    属性 含义    times[i] 完成订单需要连续工作的天数   deadlines[i] 必须完成订单的截止日期   profits[i] 完成订单的收益   约束：  从第 1 天开始工作 一旦开始某个订单，必须连续完成，不能暂停或切换 每天只能处理一个订单 所有被选订单的完成时间 ≤ 各自截止日期 可以放弃任意订单  目标：在满足所有约束下，求最大总收益。 输入 &#x2F; 输出 第一行：times，英文逗号分隔 第二行：deadlines，英文逗号分隔 第三行：profits，英文逗号分隔 输出：一个整数，最大总收益  约束：1 ≤ N ≤ 500，数组元素均为正整数。 示例1234567输入3,1,1,13,2,3,3100,40,40,40输出120  解释：放弃 100 收益、要连做 3 天的大单，改做三个 1 天小单（40×3&#x3D;...</div></div></div></a><a class="pagination-related" href="/2026/10/15/%E6%9C%80%E5%A4%A7%E4%B9%98%E7%A7%AF%E5%AD%90%E6%95%B0%E7%BB%84%E4%B8%89%E7%A7%8D%E5%86%99%E6%B3%95%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="最大乘积子数组三种写法学习笔记"><img class="cover" src="/img/loading.jpg" data-lazy-src="/img/zxl_1.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-15</div><div class="info-item-2">最大乘积子数组三种写法学习笔记</div></div><div class="info-2"><div class="info-item-1">最大乘积子数组的三种写法：回溯、动态规划与滚动变量「最大乘积」看起来只是在数组里找一个乘积最大的范围，但负数和零会让问题变得特别一些。本文从最初的回溯代码出发，再介绍完整动态规划和滚动变量优化，重点讲清楚每种写法解决什么问题。 本文按三种思路展开：  回溯枚举任意子集：理解最初代码为什么不适用于连续子数组。 动态规划数组：用 maxF 和 minF 记录每个位置的状态。 滚动变量：只保留上一位置的状态，将空间降到 O(1)。  对应力扣题目152. 乘积最大子数组（Maximum Product Subarray）  一、先明确题目：子数组必须连续以常见的「最大乘积子数组」问题为例，给定一个整数数组，要求找出一个非空连续子数组，使子数组中的元素乘积最大。 例如： 123输入：[2, 3, -2, 4]答案：6说明：连续子数组 [2, 3] 的乘积是 6。  “连续”是关键。对于 [2, 3, -2, 4]，不能跳过 -2 再把 2、3、4 组合起来，因为它们不是原数组中的连续一段。  二、写法一：回溯代码实际枚举的是任意子集最初的回溯代码在做两件事：对每个元素尝试选或不选；并且先...</div></div></div></a><a class="pagination-related" href="/2026/09/23/%E4%BC%98%E5%85%88%E9%98%9F%E5%88%97%E4%B8%8E%E5%88%86%E6%B2%BB%E5%90%88%E5%B9%B6%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="优先队列与分治合并学习笔记"><img class="cover" src="/img/loading.jpg" data-lazy-src="/img/zxl_4.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-09-23</div><div class="info-item-2">优先队列与分治合并学习笔记</div></div><div class="info-2"><div class="info-item-1">Java 优先队列与分治合并：从合并 K 个有序链表到有序数组合并多个有序序列，是很适合学习优先队列和分治思想的一类题目。 这篇文章围绕三个问题展开：  使用优先队列合并 K 个有序链表 使用分治法合并 K 个有序链表 使用分治法合并 K 个有序数组  三种方法都利用了“局部有序”的条件，但组织计算的方式不同。读完后，你应该能知道什么时候用优先队列，什么时候用分治，以及 Java 中如何定义队列元素的优先级。  一、先认识 Java 的 PriorityQueue1. 什么是优先队列？普通队列通常按照先进先出的顺序取元素。优先队列则会根据元素的优先级决定取出顺序。 Java 的 PriorityQueue 默认是最小值优先：队头是当前最小的元素。调用 poll() 会取出并移除队头；调用 peek() 只查看队头，不移除元素。Oracle 文档列出的复杂度是：插入和取出为 O(log n)，查看队头为 O(1)。Oracle Java PriorityQueue 文档 常用方法如下：    方法 作用    offer(value) 将元素加入队列   poll() 取出并移除队...</div></div></div></a><a class="pagination-related" href="/2026/10/15/287-%E5%AF%BB%E6%89%BE%E9%87%8D%E5%A4%8D%E6%95%B0%E4%B8%89%E7%A7%8D%E8%A7%A3%E6%B3%95%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/" title="287-寻找重复数三种解法学习记录"><img class="cover" src="/img/loading.jpg" data-lazy-src="/img/zxl_5.png" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-10-15</div><div class="info-item-2">287-寻找重复数三种解法学习记录</div></div><div class="info-2"><div class="info-item-1">LeetCode 287：寻找重复数——三种解法学习记录 题目：287. 寻找重复数官方题解：寻找重复数  一、题目条件给定长度为 n + 1 的数组 nums，其中每个数字都在 [1, n] 范围内。恰好有一个不同的数字重复出现，重复次数至少为两次；其余数字最多出现一次。要求：  返回重复的数字； 不修改数组； 额外空间为 O(1)。  这里的“一个重复数字”指只有一个数值重复，但它可以出现两次、三次或更多次。 12nums = [1, 3, 4, 2, 2]重复数字是 2  二、先看懂题目为什么有重复数数组有 n + 1 个位置，但可选的数字只有 n 种：1, 2, ..., n。因此至少有一个数字要被使用不止一次。这是抽屉原理。 例如有 5 个格子，却只有 4 种数字可填，至少有一种数字会重复。 三、方法一：值域二分查找1. 二分的不是数组下标数组没有排序，所以不能在数组下标上做普通二分。这里二分的是答案可能的范围 [1, n]。 选一个 mid，统计数组中有多少个数满足 nums[i] &lt;= mid，记为 count：  count &gt; mid：重复数在 [1...</div></div></div></a></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="waline-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/loading.jpg" data-lazy-src="/img/total.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">猪教授</div><div class="author-info-description">纸上谈来终觉浅，绝知此事要躬行</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">86</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">36</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">6</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/ZxlDragonDoctor"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/ZxlDragonDoctor" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">欢迎来到花独柒的博客，记录生活，分享美好。</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%88%86%E5%89%B2%E7%AD%89%E5%92%8C%E5%AD%90%E9%9B%86%EF%BC%9A%E4%BB%8E%E8%AE%BF%E9%97%AE%E6%A0%87%E8%AE%B0%E5%88%B0%E4%B8%8A%E4%B8%80%E8%BD%AE%E7%8A%B6%E6%80%81"><span class="toc-number">1.</span> <span class="toc-text">分割等和子集：从访问标记到上一轮状态</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%A2%98%E7%9B%AE%E4%B8%8E%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="toc-number">1.1.</span> <span class="toc-text">题目与参考链接</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%A0%B8%E5%BF%83%E7%BB%93%E8%AE%BA"><span class="toc-number">1.2.</span> <span class="toc-text">一、核心结论</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E6%8A%8A%E9%A2%98%E7%9B%AE%E8%BD%AC%E5%8C%96%E6%88%90%E2%80%9C%E8%83%BD%E5%90%A6%E5%87%91%E5%87%BA%E7%9B%AE%E6%A0%87%E5%92%8C%E2%80%9D"><span class="toc-number">1.3.</span> <span class="toc-text">二、把题目转化成“能否凑出目标和”</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E7%8A%B6%E6%80%81%E5%AE%9A%E4%B9%89%E4%B8%8E%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-number">1.4.</span> <span class="toc-text">三、状态定义与初始化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%87%8D%E8%A6%81%E5%8C%BA%E5%88%AB%EF%BC%9Adp-%E5%9C%A8%E8%AE%B0%E5%BD%95%E5%8F%AF%E8%83%BD%E6%80%A7%EF%BC%8C%E4%B8%8D%E6%98%AF%E5%9C%A8%E5%88%86%E9%85%8D%E5%85%83%E7%B4%A0"><span class="toc-number">1.4.1.</span> <span class="toc-text">重要区别：dp 在记录可能性，不是在分配元素</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%85%A8%E5%B1%80%E8%AE%BF%E9%97%AE%E6%A0%87%E8%AE%B0%E7%9A%84%E5%B1%80%E9%99%90"><span class="toc-number">1.5.</span> <span class="toc-text">四、全局访问标记的局限</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E4%B8%A4%E4%B8%AA%E5%90%88%E6%B3%95%E6%96%B9%E6%A1%88%EF%BC%8C%E4%BC%9A%E8%A2%AB%E5%85%A8%E5%B1%80%E6%A0%87%E8%AE%B0%E9%94%99%E8%AF%AF%E5%9C%B0%E4%BA%92%E7%9B%B8%E9%99%90%E5%88%B6"><span class="toc-number">1.5.1.</span> <span class="toc-text">4.1 两个合法方案，会被全局标记错误地互相限制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E5%8F%8D%E4%BE%8B%EF%BC%9A%E5%85%A8%E5%B1%80%E6%A0%87%E8%AE%B0%E5%AF%BC%E8%87%B4%E5%90%88%E6%B3%95%E7%BB%84%E5%90%88%E9%81%97%E6%BC%8F"><span class="toc-number">1.5.2.</span> <span class="toc-text">4.2 反例：全局标记导致合法组合遗漏</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E8%AE%BF%E9%97%AE%E6%A0%87%E8%AE%B0%E7%9A%84%E9%80%82%E7%94%A8%E8%8C%83%E5%9B%B4"><span class="toc-number">1.5.3.</span> <span class="toc-text">4.3 访问标记的适用范围</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E4%B8%8A%E4%B8%80%E8%BD%AE%E7%8A%B6%E6%80%81%E7%9A%84%E5%AE%9A%E4%B9%89"><span class="toc-number">1.6.</span> <span class="toc-text">五、上一轮状态的定义</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E8%AF%BB%E5%8F%96%E4%B8%8A%E4%B8%80%E8%BD%AE%E7%8A%B6%E6%80%81%EF%BC%9F"><span class="toc-number">1.7.</span> <span class="toc-text">六、为什么要读取上一轮状态？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E7%94%A8-2-6-%E7%9C%8B%E6%B8%85%E9%87%8D%E5%A4%8D%E9%80%89%E6%8B%A9"><span class="toc-number">1.7.1.</span> <span class="toc-text">6.1 用 [2, 6] 看清重复选择</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E5%B8%83%E5%B0%94%E7%8A%B6%E6%80%81%E4%B8%8D%E8%AE%B0%E5%BD%95%E5%85%83%E7%B4%A0%E4%BD%BF%E7%94%A8%E8%B7%AF%E5%BE%84"><span class="toc-number">1.7.2.</span> <span class="toc-text">6.2 布尔状态不记录元素使用路径</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-%E7%94%A8%E4%BA%8C%E7%BB%B4%E5%AE%9A%E4%B9%89%E6%8A%8A%E9%80%BB%E8%BE%91%E5%86%99%E5%AE%8C%E6%95%B4"><span class="toc-number">1.7.3.</span> <span class="toc-text">6.3 用二维定义把逻辑写完整</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E6%AD%A3%E5%BA%8F%E5%AE%9E%E7%8E%B0%EF%BC%9A%E5%A4%8D%E5%88%B6%E4%B8%8A%E4%B8%80%E8%BD%AE%E7%8A%B6%E6%80%81"><span class="toc-number">1.8.</span> <span class="toc-text">七、正序实现：复制上一轮状态</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-clone-%E5%81%9A%E4%BA%86%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="toc-number">1.8.1.</span> <span class="toc-text">7.1 clone() 做了什么？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-2-%E9%80%90%E6%AD%A5%E6%8E%A8%E6%BC%94%EF%BC%9A%E5%B7%B2%E7%BB%8F%E5%A4%84%E7%90%86%E5%AE%8C-1%EF%BC%8C%E7%8E%B0%E5%9C%A8%E5%A4%84%E7%90%86-2"><span class="toc-number">1.8.2.</span> <span class="toc-text">7.2 逐步推演：已经处理完 1，现在处理 2</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-3-%E4%B8%BA%E4%BB%80%E4%B9%88%E5%86%85%E5%B1%82%E4%BB%8E-num-%E5%BC%80%E5%A7%8B%EF%BC%9F"><span class="toc-number">1.8.3.</span> <span class="toc-text">7.3 为什么内层从 num 开始？</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E5%80%92%E5%BA%8F%E5%AE%9E%E7%8E%B0%EF%BC%9A%E5%9C%A8%E5%8E%9F%E6%95%B0%E7%BB%84%E4%B8%8A%E6%9B%B4%E6%96%B0"><span class="toc-number">1.9.</span> <span class="toc-text">八、倒序实现：在原数组上更新</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#8-1-%E4%B8%BA%E4%BB%80%E4%B9%88%E5%80%92%E5%BA%8F%E8%AF%BB%E5%88%B0%E7%9A%84%E6%98%AF%E6%97%A7%E5%80%BC%EF%BC%9F"><span class="toc-number">1.9.1.</span> <span class="toc-text">8.1 为什么倒序读到的是旧值？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-2-%E5%86%8D%E7%9C%8B%E5%A4%84%E7%90%86%E6%95%B0%E5%AD%97-2-%E7%9A%84%E9%A1%BA%E5%BA%8F"><span class="toc-number">1.9.2.</span> <span class="toc-text">8.2 再看处理数字 2 的顺序</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-3-%E6%AD%A3%E5%BA%8F%E5%88%B0%E5%BA%95%E8%83%BD%E4%B8%8D%E8%83%BD%E7%94%A8%EF%BC%9F"><span class="toc-number">1.9.3.</span> <span class="toc-text">8.3 正序到底能不能用？</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E5%B8%B8%E8%A7%81%E5%AE%9E%E7%8E%B0%E9%94%99%E8%AF%AF%E4%B8%8E%E8%BE%B9%E7%95%8C%E6%A3%80%E6%9F%A5"><span class="toc-number">1.10.</span> <span class="toc-text">九、常见实现错误与边界检查</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#9-1-%E5%86%85%E5%B1%82%E5%BE%AA%E7%8E%AF%E9%80%92%E5%A2%9E%E4%BA%86%E9%94%99%E8%AF%AF%E5%8F%98%E9%87%8F"><span class="toc-number">1.10.1.</span> <span class="toc-text">9.1 内层循环递增了错误变量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-2-%E6%8A%8A-vist-j-%E5%86%99%E8%BF%9B%E6%9D%A1%E4%BB%B6%EF%BC%8C%E4%B8%8D%E6%98%AF%E2%80%9C%E8%B7%B3%E8%BF%87%E5%B7%B2%E8%AE%BF%E9%97%AE%E5%85%83%E7%B4%A0%E2%80%9D"><span class="toc-number">1.10.2.</span> <span class="toc-text">9.2 把 !vist[j] 写进条件，不是“跳过已访问元素”</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-3-%E7%BC%BA%E5%B0%91%E5%A5%87%E5%81%B6%E5%88%A4%E6%96%AD"><span class="toc-number">1.10.3.</span> <span class="toc-text">9.3 缺少奇偶判断</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-4-%E6%88%90%E5%91%98%E5%8F%98%E9%87%8F%E5%9C%A8%E5%A4%9A%E6%AC%A1%E8%B0%83%E7%94%A8%E4%B9%8B%E9%97%B4%E6%AE%8B%E7%95%99%E7%8A%B6%E6%80%81"><span class="toc-number">1.10.4.</span> <span class="toc-text">9.4 成员变量在多次调用之间残留状态</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-5-%E5%BE%AA%E7%8E%AF%E7%BB%93%E6%9E%84%E8%A6%81%E4%B8%8E%E7%8A%B6%E6%80%81%E5%90%AB%E4%B9%89%E9%85%8D%E5%A5%97"><span class="toc-number">1.10.5.</span> <span class="toc-text">9.5 循环结构要与状态含义配套</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E3%80%81%E5%AE%8C%E6%95%B4-Java-%E5%AE%9E%E7%8E%B0"><span class="toc-number">1.11.</span> <span class="toc-text">十、完整 Java 实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#10-1-%E5%80%92%E5%BA%8F%E7%89%88%E6%9C%AC%EF%BC%9A%E4%B8%80%E7%BB%B4%E6%95%B0%E7%BB%84%E5%8E%9F%E5%9C%B0%E6%9B%B4%E6%96%B0"><span class="toc-number">1.11.1.</span> <span class="toc-text">10.1 倒序版本：一维数组原地更新</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-2-%E6%AD%A3%E5%BA%8F%E7%89%88%E6%9C%AC%EF%BC%9A%E5%A4%8D%E5%88%B6%E4%B8%8A%E4%B8%80%E8%BD%AE%E7%8A%B6%E6%80%81"><span class="toc-number">1.11.2.</span> <span class="toc-text">10.2 正序版本：复制上一轮状态</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-3-%E5%A4%8D%E6%9D%82%E5%BA%A6"><span class="toc-number">1.11.3.</span> <span class="toc-text">10.3 复杂度</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E4%B8%80%E3%80%81%E8%87%AA%E6%B5%8B%E4%B8%8E%E5%A4%8D%E4%B9%A0"><span class="toc-number">1.12.</span> <span class="toc-text">十一、自测与复习</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#11-1-%E6%A3%80%E6%9F%A5%E4%BB%A3%E7%A0%81%E7%9A%84%E6%B5%8B%E8%AF%95%E7%94%A8%E4%BE%8B"><span class="toc-number">1.12.1.</span> <span class="toc-text">11.1 检查代码的测试用例</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#11-2-%E5%A4%8D%E4%B9%A0%E9%97%AE%E9%A2%98"><span class="toc-number">1.12.2.</span> <span class="toc-text">11.2 复习问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#11-3-%E5%8F%82%E8%80%83%E7%AD%94%E6%A1%88"><span class="toc-number">1.12.3.</span> <span class="toc-text">11.3 参考答案</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E4%BA%8C%E3%80%81%E6%80%BB%E7%BB%93%EF%BC%9A%E4%B8%A4%E7%A7%8D%E5%AE%9E%E7%8E%B0%E5%85%B1%E4%BA%AB%E5%90%8C%E4%B8%80%E7%8A%B6%E6%80%81%E8%BD%AC%E7%A7%BB"><span class="toc-number">1.13.</span> <span class="toc-text">十二、总结：两种实现共享同一状态转移</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/11/08/%E5%88%86%E5%89%B2%E7%AD%89%E5%92%8C%E5%AD%90%E9%9B%86-%E4%BB%8E%E8%AE%BF%E9%97%AE%E6%A0%87%E8%AE%B0%E5%88%B0%E4%B8%8A%E4%B8%80%E8%BD%AE%E7%8A%B6%E6%80%81/" title="分割等和子集：从访问标记到上一轮状态"><img src="/img/loading.jpg" data-lazy-src="/img/zxl_7.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="分割等和子集：从访问标记到上一轮状态"/></a><div class="content"><a class="title" href="/2026/11/08/%E5%88%86%E5%89%B2%E7%AD%89%E5%92%8C%E5%AD%90%E9%9B%86-%E4%BB%8E%E8%AE%BF%E9%97%AE%E6%A0%87%E8%AE%B0%E5%88%B0%E4%B8%8A%E4%B8%80%E8%BD%AE%E7%8A%B6%E6%80%81/" title="分割等和子集：从访问标记到上一轮状态">分割等和子集：从访问标记到上一轮状态</a><time datetime="2026-11-07T18:00:00.000Z" title="发表于 2026-11-08 02:00:00">2026-11-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/10/27/%E5%A0%86%E6%8E%92%E5%BA%8F%E5%8E%9F%E7%90%86%E4%B8%8E%E8%BE%B9%E7%95%8C%E6%8E%A8%E5%AF%BC/" title="为什么堆排序要从 `n/2 - 1` 开始建堆？"><img src="/img/loading.jpg" data-lazy-src="/img/zxl_4.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="为什么堆排序要从 `n/2 - 1` 开始建堆？"/></a><div class="content"><a class="title" href="/2026/10/27/%E5%A0%86%E6%8E%92%E5%BA%8F%E5%8E%9F%E7%90%86%E4%B8%8E%E8%BE%B9%E7%95%8C%E6%8E%A8%E5%AF%BC/" title="为什么堆排序要从 `n/2 - 1` 开始建堆？">为什么堆排序要从 `n/2 - 1` 开始建堆？</a><time datetime="2026-10-27T02:30:00.000Z" title="发表于 2026-10-27 10:30:00">2026-10-27</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/10/27/%E8%AE%A2%E5%8D%95%E7%B3%BB%E7%BB%9F%E9%AB%98%E5%B3%B0%E6%9C%9F%E6%95%85%E9%9A%9C%E5%88%86%E6%9E%90-%E9%9D%A2%E8%AF%95%E9%A2%98/" title="为什么上午 9 点下单正常，下午 6 点就「服务器繁忙」？"><img src="/img/loading.jpg" data-lazy-src="/img/zxl_8.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="为什么上午 9 点下单正常，下午 6 点就「服务器繁忙」？"/></a><div class="content"><a class="title" href="/2026/10/27/%E8%AE%A2%E5%8D%95%E7%B3%BB%E7%BB%9F%E9%AB%98%E5%B3%B0%E6%9C%9F%E6%95%85%E9%9A%9C%E5%88%86%E6%9E%90-%E9%9D%A2%E8%AF%95%E9%A2%98/" title="为什么上午 9 点下单正常，下午 6 点就「服务器繁忙」？">为什么上午 9 点下单正常，下午 6 点就「服务器繁忙」？</a><time datetime="2026-10-27T02:00:00.000Z" title="发表于 2026-10-27 10:00:00">2026-10-27</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/10/15/287-%E5%AF%BB%E6%89%BE%E9%87%8D%E5%A4%8D%E6%95%B0%E4%B8%89%E7%A7%8D%E8%A7%A3%E6%B3%95%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/" title="287-寻找重复数三种解法学习记录"><img src="/img/loading.jpg" data-lazy-src="/img/zxl_5.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="287-寻找重复数三种解法学习记录"/></a><div class="content"><a class="title" href="/2026/10/15/287-%E5%AF%BB%E6%89%BE%E9%87%8D%E5%A4%8D%E6%95%B0%E4%B8%89%E7%A7%8D%E8%A7%A3%E6%B3%95%E5%AD%A6%E4%B9%A0%E8%AE%B0%E5%BD%95/" title="287-寻找重复数三种解法学习记录">287-寻找重复数三种解法学习记录</a><time datetime="2026-10-15T11:10:00.000Z" title="发表于 2026-10-15 19:10:00">2026-10-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/10/15/%E6%89%93%E5%AE%B6%E5%8A%AB%E8%88%8D1%E5%88%B03%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="打家劫舍1到3学习笔记"><img src="/img/loading.jpg" data-lazy-src="/img/zxl_3.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="打家劫舍1到3学习笔记"/></a><div class="content"><a class="title" href="/2026/10/15/%E6%89%93%E5%AE%B6%E5%8A%AB%E8%88%8D1%E5%88%B03%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" title="打家劫舍1到3学习笔记">打家劫舍1到3学习笔记</a><time datetime="2026-10-15T11:00:00.000Z" title="发表于 2026-10-15 19:00:00">2026-10-15</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/wallhaven-gp8pdq.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2023 - 2026 By 猪教授</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.7.0</a></span></div><div class="footer_custom_text">纸上谈来终觉浅，绝知此事要躬行</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.7.0"></script><script src="/js/main.js?v=5.7.0"></script><script src="/js/tw_cn.js?v=5.7.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.1.14/dist/fancybox/fancybox.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page@5.2.0/instantpage.min.js" type="module"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.iife.min.js"></script><script src="https://cdn.jsdelivr.net/npm/node-snackbar@0.1.16/dist/snackbar.min.js"></script><div class="js-pjax"><script>(() => {
+  const changeScriptToMath = article => {
+    article.querySelectorAll('script[type^="math/tex"]').forEach(el => {
+      const display = /mode=display/.test(el.type)
+      const node = document.createElement(display ? 'div' : 'span')
+      node.textContent = display
+        ? `$$${el.textContent}$$`
+        : `$${el.textContent}$`
+      el.parentNode.replaceChild(node, el)
+    })
+  }
+
+  const loadMathjax = () => {
+    const article = document.getElementById('article-container')
+    if (!article || article.querySelector('.hbe-container')) return
+    changeScriptToMath(article)
+
+    if (!window.MathJax) {
+      window.MathJax = {
+        loader: {
+          load: [
+            // Four font extension packages (optional)
+            //- '[tex]/bbm',
+            //- '[tex]/bboldx',
+            //- '[tex]/dsfont',
+            '[tex]/mhchem',
+            'ui/lazy'
+          ],
+          paths: {
+            'mathjax-newcm': '[mathjax]/../@mathjax/mathjax-newcm-font',
+
+            //- // Four font extension packages (optional)
+            //- 'mathjax-bbm-extension': '[mathjax]/../@mathjax/mathjax-bbm-font-extension',
+            //- 'mathjax-bboldx-extension': '[mathjax]/../@mathjax/mathjax-bboldx-font-extension',
+            //- 'mathjax-dsfont-extension': '[mathjax]/../@mathjax/mathjax-dsfont-font-extension',
+            'mathjax-mhchem-extension': '[mathjax]/../@mathjax/mathjax-mhchem-font-extension'
+          }
+        },
+        output: {
+          font: 'mathjax-newcm',
+        },
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          tags: 'ams',
+          packages: {
+            '[+]': [
+              'mhchem'
+            ]
+          }
+        },
+        chtml: {
+          scale: 1.1
+        },
+        options: {
+          lazyMargin: '200px',
+          enableMenu: true,
+          menuOptions: {
+            settings: {
+              enrich: false  // Turn off Braille and voice narration text automatic generation
+            }
+          },
+        }
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.min.js'
+      script.id = 'MathJax-script'
+      script.async = true
+      document.head.appendChild(script)
+    } else {
+      MathJax.typesetClear()
+      MathJax.typesetPromise([ article ])
+    }
+  }
+
+  btf.addGlobalFn('encrypt', loadMathjax, 'mathjax')
+  window.pjax ? loadMathjax() : window.addEventListener('load', loadMathjax)
+})()</script><script>(() => {
+  const parseViewBox = viewBox => {
+    if (!viewBox) return null
+    const parts = viewBox.trim().split(/[\s,]+/).map(n => Number(n))
+    if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return null
+    return parts
+  }
+
+  const getSvgViewBox = svg => {
+    const attr = parseViewBox(svg.getAttribute('viewBox'))
+    if (attr) return attr
+
+    // Fallback: use bbox to build a viewBox
+    try {
+      const bbox = svg.getBBox()
+      if (bbox && bbox.width && bbox.height) return [bbox.x, bbox.y, bbox.width, bbox.height]
+    } catch (e) {
+      // getBBox may fail on some edge cases; ignore
+    }
+
+    const w = Number(svg.getAttribute('width')) || 0
+    const h = Number(svg.getAttribute('height')) || 0
+    if (w > 0 && h > 0) return [0, 0, w, h]
+    return [0, 0, 100, 100]
+  }
+
+  const setSvgViewBox = (svg, vb) => {
+    svg.setAttribute('viewBox', `${vb[0]} ${vb[1]} ${vb[2]} ${vb[3]}`)
+  }
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
+
+  const openSvgInNewTab = ({ source, initViewBox }) => {
+    const getClonedSvg = () => {
+      if (typeof source === 'string') {
+        const template = document.createElement('template')
+        template.innerHTML = source.trim()
+        const svg = template.content.querySelector('svg')
+        return svg ? svg.cloneNode(true) : null
+      }
+      if (source && typeof source.cloneNode === 'function') {
+        return source.cloneNode(true)
+      }
+      return null
+    }
+
+    const clone = getClonedSvg()
+    if (!clone) return
+    if (initViewBox && initViewBox.length === 4) {
+      clone.setAttribute('viewBox', initViewBox.join(' '))
+    }
+    if (!clone.getAttribute('xmlns')) clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    if (!clone.getAttribute('xmlns:xlink') && clone.innerHTML.includes('xlink:')) {
+      clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    }
+    // inject background to match current theme
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+    const bg = getComputedStyle(document.body).backgroundColor || (isDark ? '#1e1e1e' : '#ffffff')
+    if (!clone.style.background) clone.style.background = bg
+
+    const serializer = new XMLSerializer()
+    const svgSource = serializer.serializeToString(clone)
+    const htmlSource = `<!doctype html><html><head><meta charset="utf-8" />
+      <style>
+        html, body { width: 100%; height: 100%; margin: 0; display: flex; align-items: center; justify-content: center; background: ${bg}; }
+        svg { max-width: 100%; max-height: 100%; height: auto; width: auto; }
+      </style>
+      </head><body>${svgSource}</body></html>`
+    const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+
+    setTimeout(() => URL.revokeObjectURL(url), 5000)
+  }
+
+  const attachMermaidViewerButton = wrap => {
+    let btn = wrap.querySelector('.mermaid-open-btn')
+    if (!btn) {
+      btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'mermaid-open-btn'
+      wrap.appendChild(btn)
+    }
+
+    btn.innerHTML = '<i class="fa fa-search fa-fw" aria-hidden="true"></i>'
+
+    if (!btn.__mermaidViewerBound) {
+      btn.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        const svg = wrap.__mermaidOriginalSvg || wrap.querySelector('svg')
+        if (!svg) return
+        const initViewBox = wrap.__mermaidInitViewBox
+        openSvgInNewTab({ source: svg, initViewBox })
+      })
+      btn.__mermaidViewerBound = true
+    }
+  }
+
+  // Zoom around a point (px, py) in the SVG viewport (in viewBox coordinates)
+  const zoomAtPoint = (vb, factor, px, py) => {
+    const w = vb[2] * factor
+    const h = vb[3] * factor
+    const nx = px - (px - vb[0]) * factor
+    const ny = py - (py - vb[1]) * factor
+    return [nx, ny, w, h]
+  }
+
+  const initMermaidGestures = wrap => {
+    // Clean up previous event listeners and pending frames
+    if (wrap.__mermaidAbortController) {
+      wrap.__mermaidAbortController.abort()
+      if (wrap.__mermaidRafId) cancelAnimationFrame(wrap.__mermaidRafId)
+    }
+    const ac = new AbortController()
+    wrap.__mermaidAbortController = ac
+    const svg = wrap.querySelector('svg')
+    if (!svg) return
+
+    // Ensure viewBox exists so gestures always work
+    const initVb = getSvgViewBox(svg)
+    wrap.__mermaidInitViewBox = initVb
+    wrap.__mermaidCurViewBox = initVb.slice()
+    setSvgViewBox(svg, initVb)
+    // Disable default gestures to prevent scroll chaining and pinch-zoom penetration in Chrome
+    svg.style.touchAction = 'none'
+
+    // Cache BoundingClientRect, throttled on scroll to reduce reflow
+    let cachedRect = svg.getBoundingClientRect()
+    let rectDirty = false
+    const markRectDirty = () => { rectDirty = true }
+    window.addEventListener('resize', markRectDirty, { signal: ac.signal })
+    window.addEventListener('scroll', markRectDirty, { signal: ac.signal, capture: true })
+    const getRect = () => {
+      if (rectDirty) {
+        cachedRect = svg.getBoundingClientRect()
+        rectDirty = false
+      }
+      return cachedRect
+    }
+
+    // Precompute clamp bounds from initial viewBox
+    const minW = initVb[2] * 0.1
+    const maxW = initVb[2] * 10
+    const minH = initVb[3] * 0.1
+    const maxH = initVb[3] * 10
+    const clampVb = vb => {
+      const out = vb.slice()
+      out[2] = clamp(out[2], minW, maxW)
+      out[3] = clamp(out[3], minH, maxH)
+      return out
+    }
+
+    // Throttle DOM updates using requestAnimationFrame
+    let pendingVb = null
+    let rafId = null
+    const applyVb = () => {
+      if (pendingVb) {
+        wrap.__mermaidCurViewBox = pendingVb
+        setSvgViewBox(svg, pendingVb)
+        pendingVb = null
+      }
+      rafId = null
+      wrap.__mermaidRafId = null
+    }
+    const setCurVb = vb => {
+      pendingVb = clampVb(vb)
+      if (!rafId) {
+        rafId = requestAnimationFrame(applyVb)
+        wrap.__mermaidRafId = rafId
+      }
+    }
+
+    const state = {
+      pointers: new Map(),
+      startVb: null,
+      startDist: 0,
+      lastPointerX: 0,
+      lastPointerY: 0
+    }
+
+    const onPointerDown = e => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return
+      svg.setPointerCapture(e.pointerId)
+      const curVb = wrap.__mermaidCurViewBox
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+      if (state.pointers.size === 1) {
+        state.startVb = curVb.slice()
+        state.lastPointerX = e.clientX
+        state.lastPointerY = e.clientY
+      } else if (state.pointers.size === 2) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        state.startDist = Math.hypot(dx, dy)
+        state.startVb = curVb.slice()
+      }
+    }
+
+    const onPointerMove = e => {
+      if (!state.pointers.has(e.pointerId)) return
+      state.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+      const curVb = wrap.__mermaidCurViewBox
+      const rect = getRect()
+      if (state.pointers.size === 1 && state.startVb) {
+        const p = state.pointers.values().next().value
+        const dxClient = p.x - state.lastPointerX
+        const dyClient = p.y - state.lastPointerY
+        state.lastPointerX = p.x
+        state.lastPointerY = p.y
+        const dx = dxClient * (curVb[2] / rect.width)
+        const dy = dyClient * (curVb[3] / rect.height)
+        setCurVb([curVb[0] - dx, curVb[1] - dy, curVb[2], curVb[3]])
+        return
+      }
+      if (state.pointers.size === 2 && state.startVb && state.startDist > 0) {
+        const pts = [...state.pointers.values()]
+        const dx = pts[0].x - pts[1].x
+        const dy = pts[0].y - pts[1].y
+        const dist = Math.hypot(dx, dy)
+        if (!dist) return
+        const factor = state.startDist / dist
+        const cx = (pts[0].x + pts[1].x) / 2
+        const cy = (pts[0].y + pts[1].y) / 2
+        const px = curVb[0] + (cx - rect.left) * (curVb[2] / rect.width)
+        const py = curVb[1] + (cy - rect.top) * (curVb[3] / rect.height)
+        setCurVb(zoomAtPoint(state.startVb, factor, px, py))
+      }
+    }
+
+    const onPointerUpOrCancel = e => {
+      // Release PointerCapture to avoid event capture anomalies
+      if (svg.hasPointerCapture && svg.hasPointerCapture(e.pointerId)) {
+        svg.releasePointerCapture(e.pointerId)
+      }
+      state.pointers.delete(e.pointerId)
+      if (state.pointers.size === 0) {
+        state.startVb = null
+        state.startDist = 0
+      } else if (state.pointers.size === 1) {
+        const p = state.pointers.values().next().value
+        state.lastPointerX = p.x
+        state.lastPointerY = p.y
+      }
+    }
+
+    const onWheel = e => {
+      // Prevent event bubbling from triggering external scroll
+      e.preventDefault()
+      e.stopPropagation()
+      // Normalize deltaY across deltaMode (Chrome uses pixels, Safari uses lines)
+      let delta = e.deltaY
+      if (e.deltaMode === 1) delta *= 16
+      else if (e.deltaMode === 2) delta *= 400
+
+      // Continuous zoom factor: smoother than fixed 1.1/0.9 steps
+      const zoomFactor = Math.pow(1.001, delta)
+
+      const curVb = wrap.__mermaidCurViewBox
+      const rect = getRect()
+      const px = curVb[0] + (e.clientX - rect.left) * (curVb[2] / rect.width)
+      const py = curVb[1] + (e.clientY - rect.top) * (curVb[3] / rect.height)
+      setCurVb(zoomAtPoint(curVb, zoomFactor, px, py))
+    }
+
+    const onDblClick = () => {
+      const init = wrap.__mermaidInitViewBox
+      if (init) setCurVb(init)
+    }
+
+    svg.addEventListener('pointerdown', onPointerDown, { signal: ac.signal })
+    svg.addEventListener('pointermove', onPointerMove, { signal: ac.signal })
+    svg.addEventListener('pointerup', onPointerUpOrCancel, { signal: ac.signal })
+    svg.addEventListener('pointercancel', onPointerUpOrCancel, { signal: ac.signal })
+    svg.addEventListener('wheel', onWheel, { passive: false, signal: ac.signal })
+    svg.addEventListener('dblclick', onDblClick, { signal: ac.signal })
+  }
+
+  const runMermaid = ele => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+    ele.forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      // Clean up event listeners before removing old SVG
+      if (item.__mermaidAbortController) {
+        item.__mermaidAbortController.abort()
+      }
+      const oldSvg = item.querySelector('svg')
+      if (oldSvg) oldSvg.remove()
+      let config = {}
+      try {
+        config = mermaidSrc.dataset.config ? JSON.parse(mermaidSrc.dataset.config) : {}
+      } catch (e) {
+        console.warn('[mermaid] failed to parse dataset.config:', e)
+      }
+      if (!config.theme) {
+        config.theme = theme
+      }
+      const mermaidThemeConfig = `%%{init: ${JSON.stringify(config)}}%%\n`
+      const mermaidID = `mermaid-${index}`
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderMermaid = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+        if (true) initMermaidGestures(item)
+        item.__mermaidOriginalSvg = svg
+        if (true) attachMermaidViewerButton(item)
+      }
+
+      const handleError = err => {
+        console.error(`[mermaid] render failed for block #${index}:`, err)
+        const errorEl = document.createElement('div')
+        errorEl.className = 'mermaid-error'
+        errorEl.textContent = `Mermaid render error: ${err.message || err}`
+        mermaidSrc.insertAdjacentElement('afterend', errorEl)
+      }
+
+      try {
+        const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+        // mermaid v9 and v10 compatibility
+        if (typeof renderFn === 'string') {
+          renderMermaid(renderFn)
+        } else {
+          renderFn.then(({ svg }) => renderMermaid(svg)).catch(handleError)
+        }
+      } catch (err) {
+        handleError(err)
+      }
+    })
+  }
+
+  const codeToMermaid = $article => {
+    const codeMermaidEle = $article.querySelectorAll('pre > code.mermaid')
+    if (codeMermaidEle.length === 0) return
+
+    codeMermaidEle.forEach(ele => {
+      const preEle = document.createElement('pre')
+      preEle.className = 'mermaid-src'
+      preEle.hidden = true
+      preEle.textContent = ele.textContent
+      const newEle = document.createElement('div')
+      newEle.className = 'mermaid-wrap'
+      newEle.appendChild(preEle)
+      ele.parentNode.replaceWith(newEle)
+    })
+  }
+
+  const loadMermaid = () => {
+    const $article = document.getElementById('article-container')
+    if (!$article) return
+
+    if (true) codeToMermaid($article)
+    const $mermaid = $article.querySelectorAll('.mermaid-wrap')
+    if ($mermaid.length === 0) return
+
+    const runMermaidFn = () => runMermaid($mermaid)
+    btf.addGlobalFn('themeChange', runMermaidFn, 'mermaid')
+    window.loadMermaid ? runMermaidFn() : btf.getScript('https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.min.js').then(runMermaidFn)
+  }
+
+  btf.addGlobalFn('encrypt', loadMermaid, 'mermaid')
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script><script>(() => {
+  const applyThemeDefaultsConfig = theme => {
+    if (theme === 'dark-mode') {
+      Chart.defaults.color = "rgba(255, 255, 255, 0.8)"
+      Chart.defaults.borderColor = "rgba(255, 255, 255, 0.2)"
+      Chart.defaults.scale.ticks.backdropColor = "transparent"
+    } else {
+      Chart.defaults.color = "rgba(0, 0, 0, 0.8)"
+      Chart.defaults.borderColor = "rgba(0, 0, 0, 0.1)"
+      Chart.defaults.scale.ticks.backdropColor = "transparent"
+    }
+  }
+
+  // Recursively traverse the config object and automatically apply theme-specific color schemes
+  const applyThemeConfig = (obj, theme) => {
+    if (typeof obj !== 'object' || obj === null) return
+
+    Object.keys(obj).forEach(key => {
+      const value = obj[key]
+      // If the property is an object and has theme-specific options, apply them
+      if (typeof value === 'object' && value !== null) {
+        if (value[theme]) {
+          obj[key] = value[theme] // Apply the value for the current theme
+        } else {
+          // Recursively process child objects
+          applyThemeConfig(value, theme)
+        }
+      }
+    })
+  }
+
+  const runChartJS = ele => {
+    window.loadChartJS = true
+
+    Array.from(ele).forEach((item, index) => {
+      const chartSrc = item.firstElementChild
+      const chartID = item.getAttribute('data-chartjs-id') || ('chartjs-' + index) // Use custom ID or default ID
+      const width = item.getAttribute('data-width')
+      const existingCanvas = document.getElementById(chartID)
+
+      // If a canvas already exists, remove it to avoid rendering duplicates
+      if (existingCanvas) {
+          existingCanvas.parentNode.remove()
+      }
+
+      const chartDefinition = chartSrc.textContent
+      const canvas = document.createElement('canvas')
+      canvas.id = chartID
+
+      const div = document.createElement('div')
+      div.className = 'chartjs-wrap'
+
+      if (width) {
+        div.style.width = width
+      }
+
+      div.appendChild(canvas)
+      chartSrc.insertAdjacentElement('afterend', div)
+
+      const ctx = document.getElementById(chartID).getContext('2d')
+
+      const config = JSON.parse(chartDefinition)
+
+      const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark-mode' : 'light-mode'
+
+      // Set default styles (initial setup)
+      applyThemeDefaultsConfig(theme)
+
+      // Automatically traverse the config and apply dual-mode color schemes
+      applyThemeConfig(config, theme)
+
+      new Chart(ctx, config)
+    })
+  }
+
+  const loadChartJS = () => {
+    const chartJSEle = document.querySelectorAll('#article-container .chartjs-container')
+    if (chartJSEle.length === 0) return
+
+    window.loadChartJS ? runChartJS(chartJSEle) : btf.getScript('https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js').then(() => runChartJS(chartJSEle))
+  }
+
+  // Listen for theme change events
+  btf.addGlobalFn('themeChange', loadChartJS, 'chartjs')
+  btf.addGlobalFn('encrypt', loadChartJS, 'chartjs')
+
+  window.pjax ? loadChartJS() : document.addEventListener('DOMContentLoaded', loadChartJS)
+})()</script><script>(() => {
+  const abcjsInit = () => {
+    const abcjsFn = () => {
+      const $article = document.getElementById("article-container")
+      if (!$article || $article.querySelector(".hbe-container")) return
+
+      setTimeout(() => {
+        const sheets = $article.querySelectorAll(".abc-music-sheet")
+        for (let i = 0; i < sheets.length; i++) {
+          const ele = sheets[i]
+          if (ele.children.length > 0) continue
+
+          // Parse parameters from data-params attribute
+          let params = {}
+          const dp = ele.getAttribute("data-params")
+          if (dp) {
+            try {
+              params = JSON.parse(dp)
+            } catch (e) {
+              console.error("Failed to parse data-params:", e)
+            }
+          }
+
+          // Merge parsed parameters with the responsive option
+          // Ensures params content appears before responsive
+          const options = { ...params, responsive: "resize" }
+
+          // Render the music score using ABCJS.renderAbc
+          ABCJS.renderAbc(ele, ele.textContent, options)
+        }
+      }, 100)
+    }
+
+    if (typeof ABCJS === "object" && ABCJS !== null) {
+      abcjsFn()
+    } else {
+      btf.getScript("https://cdn.jsdelivr.net/npm/abcjs@6.6.4/dist/abcjs-basic-min.min.js").then(abcjsFn)
+    }
+  }
+
+  if (window.pjax) {
+    abcjsInit()
+  } else {
+    window.addEventListener("load", abcjsInit)
+  }
+
+  btf.addGlobalFn("encrypt", abcjsInit, "abcjs")
+})()</script><script>(() => {
+  let initFn = window.walineFn || null
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = {"locale":{"placeholder":"欢迎留下你的评论哦~"}}
+
+  const destroyWaline = ele => ele.destroy()
+
+  const initWaline = (Fn, el = document, path = window.location.pathname) => {
+    const waline = Fn({
+      el: el.querySelector('#waline-wrap'),
+      serverURL: 'https://waline-qzmr.vercel.app/',
+      pageview: true,
+      dark: 'html[data-theme="dark"]',
+      comment: true,
+      ...option,
+      path: isShuoshuo ? path : (option && option.path) || path
+    })
+
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyWaline = () => {
+        destroyWaline(waline)
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+  }
+
+  const loadWaline = (el, path) => {
+    if (initFn) initWaline(initFn, el, path)
+    else {
+      btf.getCSS('https://cdn.jsdelivr.net/npm/@waline/client@3.15.2/dist/waline.min.css')
+        .then(() => import('https://cdn.jsdelivr.net/npm/@waline/client@3.15.2/dist/waline.min.js'))
+        .then(({ init }) => {
+          initFn = init || Waline.init
+          initWaline(initFn, el, path)
+          window.walineFn = initFn
+        })
+    }
+  }
+
+  if (isShuoshuo) {
+    'Waline' === 'Waline'
+      ? window.shuoshuoComment = { loadComment: loadWaline } 
+      : window.loadOtherComment = loadWaline
+    return
+  }
+
+  if ('Waline' === 'Waline' || !false) {
+    if (false) btf.loadComment(document.getElementById('waline-wrap'),loadWaline)
+    else setTimeout(loadWaline, 0)
+  } else {
+    window.loadOtherComment = loadWaline
+  }
+})()</script></div><script>window.newestComments = {
+  changeContent: content => {
+    if (content === '') return content
+
+    content = content.replace(/<img.*?src="(.*?)"?[^\>]+>/ig, '[图片]') // replace image link
+    content = content.replace(/<a[^>]+?href=["']?([^"']+)["']?[^>]*>([^<]+)<\/a>/gi, '[链接]') // replace url
+    content = content.replace(/<pre><code>.*?<\/pre>/gi, '[代码]') // replace code
+    content = content.replace(/<code>.*?<\/code>/gi, '[代码]') // replace code
+    content = content.replace(/<[^>]+>/g, "") // remove html tag
+
+    if (content.length > 150) {
+      content = content.substring(0, 150) + '...'
+    }
+    return content
+  },
+
+  generateHtml: (array, ele) => {
+    let result = ''
+
+    if (array.length) {
+      for (let i = 0; i < array.length; i++) {
+        result += '<div class="aside-list-item">'
+
+        if (true && array[i].avatar) {
+          const imgAttr = 'data-lazy-src'
+          const lazyloadNative = ''
+          result += `<a href="${array[i].url}" class="thumbnail"><img ${imgAttr}="${array[i].avatar}" alt="${array[i].nick}" ${lazyloadNative}></a>`
+        }
+
+        result += `<div class="content">
+        <a class="comment" href="${array[i].url}" title="${array[i].content}">${array[i].content}</a>
+        <div class="name"><span>${array[i].nick} / </span><time datetime="${array[i].date}">${btf.diffDate(array[i].date, true)}</time></div>
+        </div></div>`
+      }
+    } else {
+      result += '暂无评论'
+    }
+
+    ele.innerHTML = result
+    window.lazyLoadInstance && window.lazyLoadInstance.update()
+    window.pjax && window.pjax.refresh(ele)
+  },
+
+  newestCommentInit: (name, getComment) => {
+    const $dom = document.querySelector('#card-newest-comments .aside-list')
+    if ($dom) {
+      const data = btf.saveToLocal.get(name)
+      if (data) {
+        newestComments.generateHtml(JSON.parse(data), $dom)
+      } else {
+        getComment($dom)
+      }
+    }
+  },
+
+  run: (name, getComment) => {
+    newestComments.newestCommentInit(name, getComment)
+    btf.addGlobalFn('pjaxComplete', () => newestComments.newestCommentInit(name, getComment), name)
+  }
+}</script><script>window.addEventListener('load', () => {
+  const keyName = 'waline-newest-comments'
+  const { changeContent, generateHtml, run } = window.newestComments
+
+  const getComment = async (ele) => {
+    try {
+      const res = await fetch('https://waline-qzmr.vercel.app/api/comment?type=recent&count=6')
+      const result = await res.json()
+      const walineArray = result.data.map(e => {
+        return {
+          'content': changeContent(e.comment),
+          'avatar': e.avatar,
+          'nick': e.nick,
+          'url': e.url + '#' + e.objectId,
+          'date': e.time || e.insertedAt
+        }
+      })
+      btf.saveToLocal.set(keyName, JSON.stringify(walineArray), 10/(60*24))
+      generateHtml(walineArray, ele)
+    } catch (err) {
+      console.error(err)
+      ele.textContent= "无法获取评论，请确认相关配置是否正确"
+    }
+  }
+
+  run(keyName, getComment)
+})</script><script src="https://busuanzi.9420.ltd/js" data-prefix="busuanzi_value" pjax></script><script data-pjax src="/js/busuanzi-fallback.js"></script><canvas class="fireworks" mobile="false"></canvas><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/fireworks.min.js"></script><script defer="defer" id="ribbon" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/canvas-ribbon.min.js" size="150" alpha="0.6" zIndex="-1" mobile="false" data-click="false"></script><script defer="defer" id="fluttering_ribbon" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/canvas-fluttering-ribbon.min.js"></script><script id="canvas_nest" defer="defer" color="135,180,240" opacity="0.7" zIndex="-1" count="99" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/canvas-nest.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = false;
+document.body.addEventListener('input', POWERMODE);
+</script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/click-heart.min.js" async="async" mobile="false"></script><script id="click-show-text" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/click-show-text.min.js" data-mobile="false" data-text="努力,加油,奋斗" data-fontsize="15px" data-random="false" async="async"></script><script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.min.js" defer="defer"></script><script>document.addEventListener('DOMContentLoaded', () => {
+  const pjaxSelectors = ["head > title","#config-diff","#body-wrap","#rightside-config-hide","#rightside-config-show",".js-pjax"]
+
+  window.pjax = new Pjax({
+    elements: 'a:not([target="_blank"]):not([data-fancybox])',
+    selectors: pjaxSelectors,
+    cacheBust: false,
+    analytics: false,
+    scrollRestoration: false
+  })
+
+  const triggerPjaxFn = (val) => {
+    if (!val) return
+    Object.values(val).forEach(fn => {
+      try {
+        fn()
+      } catch (err) {
+        console.debug('Pjax callback failed:', err)
+      }
+    })
+  }
+
+  document.addEventListener('pjax:send', () => {
+    // removeEventListener
+    btf.removeGlobalFnEvent('pjaxSendOnce')
+    btf.removeGlobalFnEvent('themeChange')
+
+    // reset readmode
+    const $bodyClassList = document.body.classList
+    if ($bodyClassList.contains('read-mode')) $bodyClassList.remove('read-mode')
+
+    triggerPjaxFn(window.globalFn.pjaxSend)
+  })
+
+  document.addEventListener('pjax:complete', () => {
+    btf.removeGlobalFnEvent('pjaxCompleteOnce')
+    document.querySelectorAll('script[data-pjax]').forEach(item => {
+      if (!item.parentNode) return
+      const newScript = document.createElement('script')
+      const content = item.text || item.textContent || ''
+      Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+      newScript.appendChild(document.createTextNode(content))
+      item.parentNode.replaceChild(newScript, item)
+    })
+
+    triggerPjaxFn(window.globalFn.pjaxComplete)
+  })
+
+  document.addEventListener('pjax:error', e => {
+    const responseURL = e.request && e.request.responseURL
+    if (e.request && e.request.status === 404) {
+      true
+        ? pjax.loadUrl('/404')
+        : responseURL && (window.location.href = responseURL)
+    } else if (responseURL) {
+      window.location.href = responseURL
+    }
+  })
+})</script><script async data-pjax src="/js/bsz-off.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="搜索文章关键词..." type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.7.0"></script></div></div></body></html>
